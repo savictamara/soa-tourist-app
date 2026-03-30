@@ -1,0 +1,57 @@
+.shell {
+  min-height: 100vh;
+  padding: 4rem 1.5rem;
+  background:
+    radial-gradient(circle at top right, rgba(252, 203, 144, 0.35), transparent 25%),
+    linear-gradient(180deg, #f8f3e8 0%, #efe4cf 100%);
+  color: #1d2a33;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.hero {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.eyebrow {
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.8rem;
+  color: #8a5a2b;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  line-height: 1.05;
+}
+
+.lead {
+  max-width: 42rem;
+  font-size: 1.15rem;
+  line-height: 1.7;
+}
+
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.service-card {
+  padding: 1.5rem;
+  border: 1px solid rgba(29, 42, 51, 0.12);
+  border-radius: 1.25rem;
+  background: rgba(255, 252, 245, 0.85);
+  box-shadow: 0 16px 40px rgba(72, 48, 22, 0.08);
+}
+
+.service-card h2 {
+  margin-top: 0;
+}
+
+code {
+  font-family: "Courier New", monospace;
+}
