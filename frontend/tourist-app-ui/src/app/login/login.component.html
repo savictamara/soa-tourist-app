@@ -1,0 +1,32 @@
+<section class="demo-grid">
+  <article class="panel">
+    <h2>Sign in</h2>
+    <p class="panel-text">Use your account to access profile features or administrator controls.</p>
+
+    <form #loginForm="ngForm" (ngSubmit)="submit()" class="form">
+      <label>
+        <span>Username</span>
+        <input
+          type="text"
+          name="username"
+          [(ngModel)]="form.username"
+          required>
+      </label>
+
+      <label>
+        <span>Password</span>
+        <input
+          type="password"
+          name="password"
+          [(ngModel)]="form.password"
+          required>
+      </label>
+
+      <button type="submit" [disabled]="loginForm.invalid || isSubmitting">
+        {{ isSubmitting ? 'Signing in...' : 'Login' }}
+      </button>
+    </form>
+
+    <p *ngIf="errorMessage" class="message error">{{ errorMessage }}</p>
+  </article>
+</section>

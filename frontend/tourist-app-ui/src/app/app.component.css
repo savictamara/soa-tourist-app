@@ -32,6 +32,11 @@ h1 {
   font-size: clamp(2rem, 4vw, 3rem);
 }
 
+.current-user {
+  margin: 0.35rem 0 0;
+  color: #8e6172;
+}
+
 .app-nav {
   display: flex;
   gap: 0.75rem;
@@ -45,6 +50,17 @@ h1 {
   background: #ffd2e1;
   color: #8d3f5f;
   font-weight: 600;
+}
+
+.logout-button {
+  border: 0;
+  padding: 0.75rem 1.1rem;
+  border-radius: 999px;
+  background: #ef7fa8;
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .app-nav a.active {

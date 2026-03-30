@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using StakeholdersService.DTOs;
 using StakeholdersService.Exceptions;
 using StakeholdersService.Services;
@@ -16,11 +17,12 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
+    [AllowAnonymous]
     [HttpPost("register")]
-    [ProducesResponseType(typeof(UserResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<ActionResult<UserResponseDto>> Register(
+    public async Task<ActionResult<AuthResponseDto>> Register(
         [FromBody] RegisterUserRequestDto request,
         CancellationToken cancellationToken)
     {
@@ -38,4 +40,25 @@ public class AuthController : ControllerBase
             return Conflict(new { message = exception.Message });
         }
     }
+
+    [AllowAnonymous]
+    [HttpPost("login")]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<AuthResponseDto>> Login(
+        [FromBody] LoginRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var authResponse = await _authService.LoginAsync(request, cancellationToken);
+            return Ok(authResponse);
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            return Unauthorized(new { message = exception.Message });
+        }
+    }
+
 }

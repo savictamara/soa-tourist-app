@@ -42,6 +42,60 @@
         </select>
       </label>
 
+      <label>
+        <span>First name</span>
+        <input
+          type="text"
+          name="firstName"
+          [(ngModel)]="form.firstName">
+      </label>
+
+      <label>
+        <span>Last name</span>
+        <input
+          type="text"
+          name="lastName"
+          [(ngModel)]="form.lastName">
+      </label>
+
+      <div class="image-field">
+        <span>Profile image</span>
+        <div
+          class="drop-zone"
+          [class.active]="imageDragActive"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave($event)"
+          (drop)="onDrop($event)">
+          <input
+            #fileInput
+            type="file"
+            accept="image/*"
+            (change)="onFileSelected($event)">
+          <p>Drag and drop an image here or click to choose a file.</p>
+        </div>
+
+        <div *ngIf="form.profileImage" class="image-preview">
+          <img [src]="form.profileImage" alt="Profile preview">
+          <button type="button" class="secondary-button" (click)="removeImage()">Remove image</button>
+        </div>
+      </div>
+
+      <label>
+        <span>Motto</span>
+        <input
+          type="text"
+          name="motto"
+          [(ngModel)]="form.motto">
+      </label>
+
+      <label>
+        <span>Biography</span>
+        <textarea
+          name="biography"
+          [(ngModel)]="form.biography"
+          rows="5"></textarea>
+      </label>
+
       <button type="submit" [disabled]="registerForm.invalid || isSubmitting">
         {{ isSubmitting ? 'Registering...' : 'Register' }}
       </button>

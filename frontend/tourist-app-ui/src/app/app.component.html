@@ -3,10 +3,15 @@
     <header class="app-header">
       <div>
         <h1>{{ title }}</h1>
+        <p *ngIf="currentUser" class="current-user">Current user: {{ currentUser.username }} ({{ currentUser.role }})</p>
       </div>
 
       <nav class="app-nav">
+        <a routerLink="/login" routerLinkActive="active">Login</a>
         <a routerLink="/register" routerLinkActive="active">Register</a>
+        <a routerLink="/profile" routerLinkActive="active">Profile</a>
+        <a *ngIf="currentUser?.role === 'Administrator'" routerLink="/users" routerLinkActive="active">Users</a>
+        <button *ngIf="currentUser" type="button" class="logout-button" (click)="clearCurrentUser()">Logout</button>
       </nav>
     </header>
 

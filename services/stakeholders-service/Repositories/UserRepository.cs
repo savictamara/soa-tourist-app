@@ -47,10 +47,20 @@ public class UserRepository : IUserRepository
             cancellationToken);
     }
 
+    public Task<User?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
+    {
+        return _dbContext.Users.FirstOrDefaultAsync(user => user.Id == id, cancellationToken);
+    }
+
     public Task<List<User>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return _dbContext.Users
             .OrderBy(user => user.Id)
             .ToListAsync(cancellationToken);
+    }
+
+    public Task SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        return _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

@@ -2,22 +2,27 @@
   <div class="users-header">
     <div>
       <h2>User accounts</h2>
-      <p class="panel-text">Only administrator can load all user accounts.</p>
+      <p class="panel-text">Administrator overview of all accounts with direct blocking controls.</p>
     </div>
   </div>
 
-  <div class="admin-form">
-    <label for="adminUsername">Admin username</label>
+  <div class="admin-form" *ngIf="currentUser as user; else loginRequired">
+    <label for="currentAdmin">Authenticated user</label>
     <input
-      id="adminUsername"
+      id="currentAdmin"
       type="text"
-      [(ngModel)]="adminUsername"
-      placeholder="Enter admin username">
-    <button type="button" (click)="loadUsers()">Load users</button>
+      [value]="user.username + ' (' + user.role + ')'"
+      readonly>
+    <button type="button" (click)="loadUsers()" [disabled]="isLoading || isBlocking || user.role !== 'Administrator'">Load users</button>
   </div>
+
+  <ng-template #loginRequired>
+    <p class="state error">Login as an administrator to access user management.</p>
+  </ng-template>
 
   <p *ngIf="isLoading" class="state">Loading users...</p>
   <p *ngIf="errorMessage" class="state error">{{ errorMessage }}</p>
+  <p *ngIf="blockMessage" class="state success">{{ blockMessage }}</p>
 
   <div *ngIf="!isLoading && !errorMessage && users.length === 0" class="state">
     No users registered yet.
@@ -32,6 +37,7 @@
           <th>Email</th>
           <th>Role</th>
           <th>Blocked</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -41,6 +47,15 @@
           <td>{{ user.email }}</td>
           <td>{{ user.role }}</td>
           <td>{{ user.isBlocked ? 'Yes' : 'No' }}</td>
+          <td>
+            <button
+              type="button"
+              class="secondary-button"
+              (click)="blockUser(user)"
+              [disabled]="user.isBlocked || isBlocking">
+              {{ user.isBlocked ? 'Blocked' : 'Block user' }}
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>

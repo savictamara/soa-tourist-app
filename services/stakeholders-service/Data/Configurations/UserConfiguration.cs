@@ -38,7 +38,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(100);
 
         builder.Property(user => user.ProfileImage)
-            .HasMaxLength(2048);
+            .HasColumnType("text");
 
         builder.Property(user => user.Motto)
             .HasMaxLength(250);
