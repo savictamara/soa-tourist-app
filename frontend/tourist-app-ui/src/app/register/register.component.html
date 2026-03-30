@@ -1,7 +1,7 @@
 <section class="demo-grid">
   <article class="panel">
     <h2>Create account</h2>
-    <p class="panel-text">Register a Guide or Tourist account for the KT1 demo.</p>
+    <p class="panel-text">Register a Guide or Tourist account.</p>
 
     <form #registerForm="ngForm" (ngSubmit)="submit()" class="form">
       <label>
@@ -49,15 +49,5 @@
 
     <p *ngIf="successMessage" class="message success">{{ successMessage }}</p>
     <p *ngIf="errorMessage" class="message error">{{ errorMessage }}</p>
-  </article>
-
-  <article class="panel info-panel">
-    <h2>Backend endpoints</h2>
-    <ul>
-      <li><code>POST /api/auth/register</code></li>
-      <li><code>GET /api/users</code></li>
-      <li><code>GET /api/health</code></li>
-    </ul>
-    <p class="panel-text">Frontend calls <code>http://localhost:5001</code>.</p>
   </article>
 </section>

@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using StakeholdersService.Data;
+using StakeholdersService.Entities;
 using StakeholdersService.Repositories;
 using StakeholdersService.Services;
 
@@ -28,6 +30,31 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersDbContext>();
+    dbContext.Database.Migrate();
+
+    if (!dbContext.Users.Any(user => user.Username == "admin"))
+    {
+        var adminUser = new User
+        {
+            Username = "admin",
+            Email = "admin@stakeholders.local",
+            Role = "Administrator",
+            IsBlocked = false,
+            FirstName = "System",
+            LastName = "Admin"
+        };
+
+        var passwordHasher = new PasswordHasher<User>();
+        adminUser.PasswordHash = passwordHasher.HashPassword(adminUser, "admin123");
+
+        dbContext.Users.Add(adminUser);
+        dbContext.SaveChanges();
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {

@@ -1,3 +1,4 @@
+import { HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -16,7 +17,11 @@ export class StakeholdersApiService {
     return this.http.post<User>(`${this.baseUrl}/auth/register`, request);
   }
 
-  getUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.baseUrl}/users`);
+  getUsers(adminUsername: string): Observable<User[]> {
+    return this.http.get<User[]>(`${this.baseUrl}/users`, {
+      headers: new HttpHeaders({
+        'X-Admin-Username': adminUsername
+      })
+    });
   }
 }

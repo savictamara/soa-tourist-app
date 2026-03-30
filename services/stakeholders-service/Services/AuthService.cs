@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using StakeholdersService.DTOs;
 using StakeholdersService.Entities;
 using StakeholdersService.Exceptions;
@@ -45,12 +47,24 @@ public class AuthService : IAuthService
             Username = username,
             Email = email,
             Role = role,
-            IsBlocked = false
+            IsBlocked = false,
+            FirstName = string.Empty,
+            LastName = string.Empty
         };
 
         user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
 
-        var createdUser = await _userRepository.AddAsync(user, cancellationToken);
+        User createdUser;
+
+        try
+        {
+            createdUser = await _userRepository.AddAsync(user, cancellationToken);
+        }
+        catch (DbUpdateException exception) when (exception.InnerException is PostgresException postgresException &&
+                                                 postgresException.SqlState == PostgresErrorCodes.UniqueViolation)
+        {
+            throw new ConflictException("Username or email already exists.");
+        }
 
         return MapToResponse(createdUser);
     }

@@ -17,9 +17,23 @@ public class UsersController : ControllerBase
 
     [HttpGet]
     [ProducesResponseType(typeof(List<UserResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<List<UserResponseDto>>> GetAll(CancellationToken cancellationToken)
     {
-        var users = await _userService.GetAllAsync(cancellationToken);
-        return Ok(users);
+        if (!Request.Headers.TryGetValue("X-Admin-Username", out var adminUsername) ||
+            string.IsNullOrWhiteSpace(adminUsername))
+        {
+            return Unauthorized(new { message = "Admin username is required." });
+        }
+
+        try
+        {
+            var users = await _userService.GetAllAsync(adminUsername.ToString(), cancellationToken);
+            return Ok(users);
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            return Unauthorized(new { message = exception.Message });
+        }
     }
 }
