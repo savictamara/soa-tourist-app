@@ -1,0 +1,40 @@
+<section class="panel">
+  <div class="profile-header">
+    <div>
+      <h2>My profile</h2>
+      <p class="panel-text">View profile details for the authenticated guide or tourist account.</p>
+    </div>
+  </div>
+
+  <div *ngIf="isLoggedIn; else registerRequired" class="profile-form">
+    <label>Current user</label>
+    <input type="text" [value]="currentUsername" readonly>
+    <button type="button" (click)="loadProfile()" [disabled]="isLoading">Load profile</button>
+  </div>
+
+  <ng-template #registerRequired>
+    <p class="state error">Login or register first to view the profile page.</p>
+  </ng-template>
+
+  <p *ngIf="isLoading" class="state">Loading profile...</p>
+  <p *ngIf="errorMessage" class="state error">{{ errorMessage }}</p>
+
+  <div *ngIf="selectedProfile && !isLoading" class="profile-card">
+    <div class="profile-image-wrapper">
+      <img
+        *ngIf="selectedProfile.profileImage; else noImage"
+        [src]="selectedProfile.profileImage"
+        alt="Profile image"
+        class="profile-image">
+      <ng-template #noImage>
+        <div class="profile-image placeholder">No image</div>
+      </ng-template>
+    </div>
+
+    <div class="profile-content">
+      <h3>{{ selectedProfile.firstName || 'No first name' }} {{ selectedProfile.lastName || '' }}</h3>
+      <p><strong>Motto:</strong> {{ selectedProfile.motto || 'No motto provided.' }}</p>
+      <p><strong>Biography:</strong> {{ selectedProfile.biography || 'No biography provided.' }}</p>
+    </div>
+  </div>
+</section>

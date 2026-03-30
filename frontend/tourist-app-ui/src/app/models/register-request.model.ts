@@ -3,4 +3,9 @@ export interface RegisterRequest {
   email: string;
   password: string;
   role: string;
+  firstName?: string;
+  lastName?: string;
+  profileImage?: string;
+  biography?: string;
+  motto?: string;
 }

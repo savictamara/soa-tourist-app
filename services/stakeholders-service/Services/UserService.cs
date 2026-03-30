@@ -38,4 +38,65 @@ public class UserService : IUserService
             Motto = user.Motto
         }).ToList();
     }
+
+    public async Task BlockAsync(long id, string adminUsername, CancellationToken cancellationToken = default)
+    {
+        var adminUser = await _userRepository.GetByUsernameAsync(adminUsername, cancellationToken);
+
+        if (adminUser is null || adminUser.Role != AdministratorRole)
+        {
+            throw new UnauthorizedAccessException("Only an administrator can block user accounts.");
+        }
+
+        var user = await _userRepository.GetByIdAsync(id, cancellationToken);
+
+        if (user is null)
+        {
+            throw new KeyNotFoundException($"User with id {id} was not found.");
+        }
+
+        if (!user.IsBlocked)
+        {
+            user.IsBlocked = true;
+            await _userRepository.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    public async Task<UserProfileResponseDto> GetProfileAsync(long id, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByIdAsync(id, cancellationToken);
+
+        if (user is null)
+        {
+            throw new KeyNotFoundException($"User with id {id} was not found.");
+        }
+
+        return new UserProfileResponseDto
+        {
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            ProfileImage = user.ProfileImage,
+            Biography = user.Biography,
+            Motto = user.Motto
+        };
+    }
+
+    public async Task<UserProfileResponseDto> GetProfileByUsernameAsync(string username, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByUsernameAsync(username, cancellationToken);
+
+        if (user is null)
+        {
+            throw new KeyNotFoundException($"User '{username}' was not found.");
+        }
+
+        return new UserProfileResponseDto
+        {
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            ProfileImage = user.ProfileImage,
+            Biography = user.Biography,
+            Motto = user.Motto
+        };
+    }
 }

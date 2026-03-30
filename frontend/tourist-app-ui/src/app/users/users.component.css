@@ -5,6 +5,10 @@
   padding: 1.5rem;
 }
 
+.panel + .panel {
+  margin-top: 1.5rem;
+}
+
 .users-header {
   display: flex;
   align-items: flex-start;
@@ -31,6 +35,17 @@ button {
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.secondary-button {
+  padding: 0.65rem 0.9rem;
+  background: #ffc1d6;
+  color: #8d3f5f;
 }
 
 .admin-form {
@@ -69,6 +84,11 @@ button {
   color: #b34366;
 }
 
+.state.success {
+  background: #e5fff0;
+  color: #26724a;
+}
+
 .table-wrapper {
   overflow-x: auto;
   margin-top: 1rem;
@@ -98,8 +118,60 @@ tbody tr:last-child td {
   border-bottom: 0;
 }
 
+.profile-card {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+  margin-top: 1rem;
+  padding: 1.25rem;
+  border-radius: 18px;
+  background: white;
+  border: 1px solid #f7d8e3;
+}
+
+.profile-image-wrapper {
+  display: flex;
+}
+
+.profile-image {
+  width: 180px;
+  height: 180px;
+  border-radius: 20px;
+  object-fit: cover;
+  background: #ffe7ef;
+}
+
+.profile-image.placeholder {
+  display: grid;
+  place-items: center;
+  color: #9d4d70;
+  font-weight: 700;
+}
+
+.profile-content h3 {
+  margin: 0 0 0.75rem;
+  color: #a8486e;
+}
+
+.profile-content p {
+  margin: 0 0 0.75rem;
+  color: #704556;
+  line-height: 1.5;
+}
+
 @media (max-width: 640px) {
   .admin-form {
     grid-template-columns: 1fr;
+  }
+
+  .profile-card {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-image {
+    width: 100%;
+    max-width: 220px;
+    height: 220px;
   }
 }

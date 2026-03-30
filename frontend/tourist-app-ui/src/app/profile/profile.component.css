@@ -1,0 +1,133 @@
+.panel {
+  background: #fffafc;
+  border: 1px solid #ffd7e5;
+  border-radius: 24px;
+  padding: 1.5rem;
+}
+
+.profile-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+h2 {
+  margin: 0;
+  color: #a8486e;
+}
+
+.panel-text {
+  margin: 0.5rem 0 0;
+  color: #8e6172;
+}
+
+.profile-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: end;
+  margin-top: 1rem;
+}
+
+.profile-form label {
+  grid-column: 1 / -1;
+  color: #7c5062;
+  font-weight: 600;
+}
+
+.profile-form input {
+  width: 100%;
+  border: 1px solid #f0bfd1;
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  background: white;
+  font: inherit;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.85rem 1.1rem;
+  background: #ef7fa8;
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.state {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 16px;
+  background: #fff1f6;
+  color: #8d3f5f;
+}
+
+.state.error {
+  background: #ffe3e8;
+  color: #b34366;
+}
+
+.profile-card {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+  margin-top: 1rem;
+  padding: 1.25rem;
+  border-radius: 18px;
+  background: white;
+  border: 1px solid #f7d8e3;
+}
+
+.profile-image-wrapper {
+  display: flex;
+}
+
+.profile-image {
+  width: 180px;
+  height: 180px;
+  border-radius: 20px;
+  object-fit: cover;
+  background: #ffe7ef;
+}
+
+.profile-image.placeholder {
+  display: grid;
+  place-items: center;
+  color: #9d4d70;
+  font-weight: 700;
+}
+
+.profile-content h3 {
+  margin: 0 0 0.75rem;
+  color: #a8486e;
+}
+
+.profile-content p {
+  margin: 0 0 0.75rem;
+  color: #704556;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .profile-form {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-card {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-image {
+    width: 100%;
+    max-width: 220px;
+    height: 220px;
+  }
+}

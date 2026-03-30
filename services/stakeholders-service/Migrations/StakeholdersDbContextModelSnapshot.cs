@@ -59,8 +59,7 @@ namespace StakeholdersService.Migrations
                         .HasColumnType("character varying(512)");
 
                     b.Property<string>("ProfileImage")
-                        .HasMaxLength(2048)
-                        .HasColumnType("character varying(2048)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Role")
                         .IsRequired()
