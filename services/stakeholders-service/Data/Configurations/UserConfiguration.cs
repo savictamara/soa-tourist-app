@@ -32,12 +32,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired();
 
         builder.Property(user => user.FirstName)
-            .HasMaxLength(100)
-            .IsRequired();
+            .HasMaxLength(100);
 
         builder.Property(user => user.LastName)
-            .HasMaxLength(100)
-            .IsRequired();
+            .HasMaxLength(100);
 
         builder.Property(user => user.ProfileImage)
             .HasMaxLength(2048);

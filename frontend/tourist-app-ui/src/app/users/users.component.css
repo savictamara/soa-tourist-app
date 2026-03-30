@@ -1,0 +1,77 @@
+.panel {
+  background: #fffafc;
+  border: 1px solid #ffd7e5;
+  border-radius: 24px;
+  padding: 1.5rem;
+}
+
+.users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+h2 {
+  margin: 0;
+  color: #a8486e;
+}
+
+.panel-text {
+  margin: 0.5rem 0 0;
+  color: #8e6172;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.85rem 1.1rem;
+  background: #ef7fa8;
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.state {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 16px;
+  background: #fff1f6;
+  color: #8d3f5f;
+}
+
+.state.error {
+  background: #ffe3e8;
+  color: #b34366;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 1rem 0.9rem;
+  border-bottom: 1px solid #f7d8e3;
+}
+
+th {
+  background: #ffe7ef;
+  color: #9d4d70;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}

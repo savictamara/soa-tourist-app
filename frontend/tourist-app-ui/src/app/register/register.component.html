@@ -1,0 +1,63 @@
+<section class="demo-grid">
+  <article class="panel">
+    <h2>Create account</h2>
+    <p class="panel-text">Register a Guide or Tourist account for the KT1 demo.</p>
+
+    <form #registerForm="ngForm" (ngSubmit)="submit()" class="form">
+      <label>
+        <span>Username</span>
+        <input
+          type="text"
+          name="username"
+          [(ngModel)]="form.username"
+          required>
+      </label>
+
+      <label>
+        <span>Email</span>
+        <input
+          type="email"
+          name="email"
+          [(ngModel)]="form.email"
+          required>
+      </label>
+
+      <label>
+        <span>Password</span>
+        <input
+          type="password"
+          name="password"
+          [(ngModel)]="form.password"
+          required>
+      </label>
+
+      <label>
+        <span>Role</span>
+        <select
+          name="role"
+          [(ngModel)]="form.role"
+          required>
+          <option value="Guide">Guide</option>
+          <option value="Tourist">Tourist</option>
+        </select>
+      </label>
+
+      <button type="submit" [disabled]="registerForm.invalid || isSubmitting">
+        {{ isSubmitting ? 'Registering...' : 'Register' }}
+      </button>
+    </form>
+
+    <p *ngIf="successMessage" class="message success">{{ successMessage }}</p>
+    <p *ngIf="errorMessage" class="message error">{{ errorMessage }}</p>
+  </article>
+
+  <article class="panel info-panel">
+    <h2>Backend endpoints</h2>
+    <ul>
+      <li><code>POST /api/auth/register</code></li>
+      <li><code>GET /api/users</code></li>
+      <li><code>GET /api/health</code></li>
+    </ul>
+    <p class="panel-text">Frontend calls <code>http://localhost:5001</code>.</p>
+  </article>
+</section>
