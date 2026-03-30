@@ -1,24 +1,18 @@
-<main class="shell">
-  <section class="hero">
-    <p class="eyebrow">KT1 SOA Setup</p>
-    <h1>{{ title }}</h1>
-    <p class="lead">
-      Angular starter application prepared for the KT1 monorepo. Business features
-      will be added in later iterations.
-    </p>
+<main class="app-shell">
+  <section class="app-card">
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">SOA KT1</p>
+        <h1>{{ title }}</h1>
+        <p class="subtitle">Registration and user overview for stakeholders-service.</p>
+      </div>
 
-    <div class="service-grid">
-      <article class="service-card">
-        <h2>Stakeholders Service</h2>
-        <p>Starter Web API on <code>http://localhost:5001</code></p>
-      </article>
+      <nav class="app-nav">
+        <a routerLink="/register" routerLinkActive="active">Register</a>
+        <a routerLink="/users" routerLinkActive="active">Users</a>
+      </nav>
+    </header>
 
-      <article class="service-card">
-        <h2>Blog Service</h2>
-        <p>Starter Web API on <code>http://localhost:5002</code></p>
-      </article>
-    </div>
+    <router-outlet></router-outlet>
   </section>
 </main>
-
-<router-outlet></router-outlet>

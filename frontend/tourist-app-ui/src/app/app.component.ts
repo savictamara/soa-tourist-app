@@ -6,5 +6,5 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'SOA Tourist App';
+  title = 'KT1 Stakeholders Demo';
 }

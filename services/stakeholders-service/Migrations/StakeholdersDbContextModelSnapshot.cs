@@ -39,7 +39,6 @@ namespace StakeholdersService.Migrations
                         .HasColumnType("character varying(255)");
 
                     b.Property<string>("FirstName")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
@@ -47,7 +46,6 @@ namespace StakeholdersService.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("LastName")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 

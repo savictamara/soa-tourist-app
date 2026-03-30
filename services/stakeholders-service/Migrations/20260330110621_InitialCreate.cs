@@ -22,8 +22,8 @@ namespace StakeholdersService.Migrations
                     Email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     Role = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     IsBlocked = table.Column<bool>(type: "boolean", nullable: false),
-                    FirstName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    LastName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    FirstName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    LastName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     ProfileImage = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
                     Biography = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: true),
                     Motto = table.Column<string>(type: "character varying(250)", maxLength: 250, nullable: true)

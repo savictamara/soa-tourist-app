@@ -11,8 +11,8 @@ using StakeholdersService.Data;
 namespace StakeholdersService.Migrations
 {
     [DbContext(typeof(StakeholdersDbContext))]
-    [Migration("20260330110621_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260330120641_UpdateUserForKt1")]
+    partial class UpdateUserForKt1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -1,0 +1,40 @@
+<section class="panel">
+  <div class="users-header">
+    <div>
+      <h2>User accounts</h2>
+      <p class="panel-text">Safe user data only. Password fields are never shown.</p>
+    </div>
+
+    <button type="button" (click)="loadUsers()">Refresh</button>
+  </div>
+
+  <p *ngIf="isLoading" class="state">Loading users...</p>
+  <p *ngIf="errorMessage" class="state error">{{ errorMessage }}</p>
+
+  <div *ngIf="!isLoading && !errorMessage && users.length === 0" class="state">
+    No users registered yet.
+  </div>
+
+  <div *ngIf="!isLoading && users.length > 0" class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Id</th>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Blocked</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users">
+          <td>{{ user.id }}</td>
+          <td>{{ user.username }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.role }}</td>
+          <td>{{ user.isBlocked ? 'Yes' : 'No' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

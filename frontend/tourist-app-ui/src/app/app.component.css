@@ -1,57 +1,72 @@
-.shell {
+.app-shell {
   min-height: 100vh;
-  padding: 4rem 1.5rem;
+  padding: 2rem 1rem;
   background:
-    radial-gradient(circle at top right, rgba(252, 203, 144, 0.35), transparent 25%),
-    linear-gradient(180deg, #f8f3e8 0%, #efe4cf 100%);
-  color: #1d2a33;
-  font-family: Georgia, "Times New Roman", serif;
+    radial-gradient(circle at top left, rgba(255, 182, 193, 0.55), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(255, 213, 220, 0.8), transparent 35%),
+    linear-gradient(180deg, #ffe6ee 0%, #ffdbe7 100%);
+  color: #5a3340;
+  font-family: Arial, sans-serif;
 }
 
-.hero {
+.app-card {
   max-width: 960px;
   margin: 0 auto;
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: 28px;
+  padding: 2rem;
+  box-shadow: 0 24px 60px rgba(194, 102, 132, 0.16);
 }
 
-.eyebrow {
-  margin: 0 0 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  font-size: 0.8rem;
-  color: #8a5a2b;
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
 }
 
 h1 {
+  margin: 0.25rem 0 0;
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.eyebrow {
   margin: 0;
-  font-size: clamp(2.5rem, 6vw, 5rem);
-  line-height: 1.05;
+  color: #d05d8a;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.8rem;
 }
 
-.lead {
-  max-width: 42rem;
-  font-size: 1.15rem;
-  line-height: 1.7;
+.subtitle {
+  margin: 0.75rem 0 0;
+  color: #8e6172;
 }
 
-.service-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1rem;
-  margin-top: 2rem;
+.app-nav {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
-.service-card {
-  padding: 1.5rem;
-  border: 1px solid rgba(29, 42, 51, 0.12);
-  border-radius: 1.25rem;
-  background: rgba(255, 252, 245, 0.85);
-  box-shadow: 0 16px 40px rgba(72, 48, 22, 0.08);
+.app-nav a {
+  text-decoration: none;
+  padding: 0.75rem 1.1rem;
+  border-radius: 999px;
+  background: #ffd2e1;
+  color: #8d3f5f;
+  font-weight: 600;
 }
 
-.service-card h2 {
-  margin-top: 0;
+.app-nav a.active {
+  background: #ef7fa8;
+  color: white;
 }
 
-code {
-  font-family: "Courier New", monospace;
+@media (max-width: 640px) {
+  .app-card {
+    padding: 1.25rem;
+  }
 }
