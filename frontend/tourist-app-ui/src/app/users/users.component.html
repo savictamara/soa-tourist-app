@@ -2,10 +2,18 @@
   <div class="users-header">
     <div>
       <h2>User accounts</h2>
-      <p class="panel-text">Safe user data only. Password fields are never shown.</p>
+      <p class="panel-text">Only administrator can load all user accounts.</p>
     </div>
+  </div>
 
-    <button type="button" (click)="loadUsers()">Refresh</button>
+  <div class="admin-form">
+    <label for="adminUsername">Admin username</label>
+    <input
+      id="adminUsername"
+      type="text"
+      [(ngModel)]="adminUsername"
+      placeholder="Enter admin username">
+    <button type="button" (click)="loadUsers()">Load users</button>
   </div>
 
   <p *ngIf="isLoading" class="state">Loading users...</p>

@@ -38,6 +38,15 @@ public class UserRepository : IUserRepository
         return user;
     }
 
+    public Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
+    {
+        var normalizedUsername = username.Trim().ToLower();
+
+        return _dbContext.Users.FirstOrDefaultAsync(
+            user => user.Username.ToLower() == normalizedUsername,
+            cancellationToken);
+    }
+
     public Task<List<User>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return _dbContext.Users

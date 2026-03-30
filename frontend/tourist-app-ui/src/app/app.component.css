@@ -21,28 +21,15 @@
 .app-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   flex-wrap: wrap;
 }
 
 h1 {
-  margin: 0.25rem 0 0;
-  font-size: clamp(2rem, 4vw, 3rem);
-}
-
-.eyebrow {
   margin: 0;
-  color: #d05d8a;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  font-size: 0.8rem;
-}
-
-.subtitle {
-  margin: 0.75rem 0 0;
-  color: #8e6172;
+  font-size: clamp(2rem, 4vw, 3rem);
 }
 
 .app-nav {

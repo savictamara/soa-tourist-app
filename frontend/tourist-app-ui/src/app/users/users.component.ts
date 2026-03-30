@@ -9,26 +9,31 @@ import { User } from '../models/user.model';
 })
 export class UsersComponent implements OnInit {
   users: User[] = [];
-  isLoading = true;
+  isLoading = false;
   errorMessage = '';
+  adminUsername = '';
 
   constructor(private readonly apiService: StakeholdersApiService) {}
 
-  ngOnInit(): void {
-    this.loadUsers();
-  }
+  ngOnInit(): void {}
 
   loadUsers(): void {
+    if (!this.adminUsername.trim()) {
+      this.errorMessage = 'Admin username is required.';
+      this.users = [];
+      return;
+    }
+
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.apiService.getUsers().subscribe({
+    this.apiService.getUsers(this.adminUsername.trim()).subscribe({
       next: (users) => {
         this.users = users;
         this.isLoading = false;
       },
-      error: () => {
-        this.errorMessage = 'Could not load users.';
+      error: (error) => {
+        this.errorMessage = error.error?.message ?? 'Could not load users.';
         this.isLoading = false;
       }
     });

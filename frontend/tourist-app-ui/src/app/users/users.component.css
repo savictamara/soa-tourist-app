@@ -7,7 +7,6 @@
 
 .users-header {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
   flex-wrap: wrap;
@@ -32,6 +31,29 @@ button {
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+}
+
+.admin-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: end;
+  margin-top: 1rem;
+}
+
+.admin-form label {
+  grid-column: 1 / -1;
+  color: #7c5062;
+  font-weight: 600;
+}
+
+.admin-form input {
+  width: 100%;
+  border: 1px solid #f0bfd1;
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  background: white;
+  font: inherit;
 }
 
 .state {
@@ -74,4 +96,10 @@ th {
 
 tbody tr:last-child td {
   border-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .admin-form {
+    grid-template-columns: 1fr;
+  }
 }
