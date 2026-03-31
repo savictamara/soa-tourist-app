@@ -6,6 +6,7 @@ import { LoginRequest } from '../models/login-request.model';
 import { RegisterRequest } from '../models/register-request.model';
 import { User } from '../models/user.model';
 import { UserProfile } from '../models/user-profile.model';
+import { UpdateUserProfileRequest } from '../models/update-user-profile-request.model';
 
 @Injectable({
   providedIn: 'root'
@@ -33,5 +34,9 @@ export class StakeholdersApiService {
 
   getMyProfile(): Observable<UserProfile> {
     return this.http.get<UserProfile>(`${this.baseUrl}/users/me/profile`);
+  }
+
+  updateMyProfile(request: UpdateUserProfileRequest): Observable<UserProfile> {
+    return this.http.put<UserProfile>(`${this.baseUrl}/users/me/profile`, request);
   }
 }

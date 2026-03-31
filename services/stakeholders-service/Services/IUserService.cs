@@ -8,4 +8,5 @@ public interface IUserService
     Task BlockAsync(long id, string adminUsername, CancellationToken cancellationToken = default);
     Task<UserProfileResponseDto> GetProfileAsync(long id, CancellationToken cancellationToken = default);
     Task<UserProfileResponseDto> GetProfileByUsernameAsync(string username, CancellationToken cancellationToken = default);
+    Task<UserProfileResponseDto> UpdateProfileAsync(string username, UpdateUserProfileRequestDto request, CancellationToken cancellationToken = default);
 }
