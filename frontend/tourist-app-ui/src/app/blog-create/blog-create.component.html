@@ -1,0 +1,114 @@
+<section class="panel">
+  <div class="blog-header">
+    <div>
+      <h2>Blog</h2>
+      <p class="panel-text">View existing blogs and create a new one when needed.</p>
+    </div>
+    <button
+      *ngIf="canCreateBlog && !isCreateFormVisible"
+      type="button"
+      class="secondary-button"
+      (click)="toggleCreateForm()">
+      Create blog
+    </button>
+  </div>
+
+  <p *ngIf="!isCreateFormVisible && isLoadingBlogs" class="state">Loading blogs...</p>
+  <p *ngIf="!isCreateFormVisible && !isLoadingBlogs && blogs.length === 0" class="state">No blogs yet.</p>
+
+  <div *ngIf="!isCreateFormVisible && !isLoadingBlogs && blogs.length > 0" class="blogs-list">
+    <article *ngFor="let blog of blogs" class="blog-card">
+      <div class="blog-main">
+        <div class="blog-content">
+          <h3>{{ blog.title }}</h3>
+          <p><strong>Created:</strong> {{ blog.createdAtUtc | date:'medium' }}</p>
+          <p><strong>Author:</strong> {{ blog.authorUsername }}</p>
+          <div class="preview-content" [innerHTML]="renderedBlogMarkdown(blog.descriptionMarkdown)"></div>
+        </div>
+        <div *ngIf="blog.imageUrls.length > 0" class="image-carousel">
+          <button
+            *ngIf="blog.imageUrls.length > 1"
+            type="button"
+            class="carousel-arrow"
+            (click)="previousBlogImage(blog)"
+            aria-label="Previous image">
+            &lsaquo;
+          </button>
+          <img [src]="currentBlogImage(blog)" alt="Blog image">
+          <button
+            *ngIf="blog.imageUrls.length > 1"
+            type="button"
+            class="carousel-arrow"
+            (click)="nextBlogImage(blog)"
+            aria-label="Next image">
+            &rsaquo;
+          </button>
+        </div>
+      </div>
+      <div *ngIf="blog.imageUrls.length > 1" class="carousel-counter">
+        {{ currentBlogImageIndex(blog) + 1 }} / {{ blog.imageUrls.length }}
+      </div>
+    </article>
+  </div>
+
+  <div *ngIf="isCreateFormVisible && canCreateBlog" class="blog-form">
+    <label for="blogTitle">Title</label>
+    <input id="blogTitle" type="text" [(ngModel)]="form.title" name="blogTitle" maxlength="200">
+
+    <label for="blogDescription">Description (Markdown)</label>
+    <textarea
+      id="blogDescription"
+      [(ngModel)]="form.descriptionMarkdown"
+      name="blogDescription"
+      rows="8"
+      maxlength="12000"
+      placeholder="Use markdown, for example: ## Heading, **bold**, *italic*, - list item"></textarea>
+
+    <div class="image-field">
+      <span>Blog images (optional)</span>
+      <div
+        class="drop-zone"
+        [class.active]="imageDragActive"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)">
+        <input
+          type="file"
+          accept="image/*"
+          (change)="onFileSelected($event)">
+        <p>Drag and drop an image here or click to choose a file.</p>
+      </div>
+
+      <div *ngIf="(form.imageUrls ?? []).length > 0" class="image-preview-grid">
+        <div *ngFor="let url of form.imageUrls; let index = index" class="image-preview">
+          <img [src]="url" alt="Blog image preview">
+          <button
+            type="button"
+            class="remove-image-button"
+            (click)="removeImageUrl(index)"
+            aria-label="Remove image">
+            x
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview">
+      <h3>Markdown preview</h3>
+      <div class="preview-content" [innerHTML]="markdownPreview()"></div>
+    </div>
+
+    <button
+      type="button"
+      (click)="submit()"
+      [disabled]="isSubmitting || !form.title.trim() || !form.descriptionMarkdown.trim()">
+      {{ isSubmitting ? 'Creating...' : 'Create blog' }}
+    </button>
+
+    <button type="button" class="secondary-button" (click)="cancelCreate()" [disabled]="isSubmitting">Cancel</button>
+  </div>
+
+  <p *ngIf="successMessage" class="state success">{{ successMessage }}</p>
+  <p *ngIf="errorMessage" class="state error">{{ errorMessage }}</p>
+</section>
+
