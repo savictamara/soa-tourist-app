@@ -10,6 +10,7 @@ import { LoginComponent } from './login/login.component';
 import { ProfileComponent } from './profile/profile.component';
 import { RegisterComponent } from './register/register.component';
 import { UsersComponent } from './users/users.component';
+import { BlogCreateComponent } from './blog-create/blog-create.component';
 
 @NgModule({
   declarations: [
@@ -17,7 +18,8 @@ import { UsersComponent } from './users/users.component';
     LoginComponent,
     ProfileComponent,
     RegisterComponent,
-    UsersComponent
+    UsersComponent,
+    BlogCreateComponent
   ],
   imports: [
     BrowserModule,
