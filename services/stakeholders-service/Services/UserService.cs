@@ -99,4 +99,31 @@ public class UserService : IUserService
             Motto = user.Motto
         };
     }
+
+    public async Task<UserProfileResponseDto> UpdateProfileAsync(string username, UpdateUserProfileRequestDto request, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByUsernameAsync(username, cancellationToken);
+
+        if (user is null)
+        {
+            throw new KeyNotFoundException($"User '{username}' was not found.");
+        }
+
+        user.FirstName = request.FirstName?.Trim();
+        user.LastName = request.LastName?.Trim();
+        user.ProfileImage = request.ProfileImage?.Trim();
+        user.Biography = request.Biography?.Trim();
+        user.Motto = request.Motto?.Trim();
+
+        await _userRepository.SaveChangesAsync(cancellationToken);
+
+        return new UserProfileResponseDto
+        {
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            ProfileImage = user.ProfileImage,
+            Biography = user.Biography,
+            Motto = user.Motto
+        };
+    }
 }

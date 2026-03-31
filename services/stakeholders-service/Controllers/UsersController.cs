@@ -111,4 +111,31 @@ public class UsersController : ControllerBase
             return NotFound(new { message = exception.Message });
         }
     }
+
+    [HttpPut("me/profile")]
+    [ProducesResponseType(typeof(UserProfileResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UserProfileResponseDto>> UpdateMyProfile(
+        [FromBody] UpdateUserProfileRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name);
+
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return Unauthorized(new { message = "Current user is not authenticated." });
+        }
+
+        try
+        {
+            var profile = await _userService.UpdateProfileAsync(username, request, cancellationToken);
+            return Ok(profile);
+        }
+        catch (KeyNotFoundException exception)
+        {
+            return NotFound(new { message = exception.Message });
+        }
+    }
 }

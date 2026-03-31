@@ -10,6 +10,13 @@
     <label>Current user</label>
     <input type="text" [value]="currentUsername" readonly>
     <button type="button" (click)="loadProfile()" [disabled]="isLoading">Load profile</button>
+    <button
+      *ngIf="selectedProfile && !isLoading && !isEditing && !isAdmin"
+      type="button"
+      class="secondary-button"
+      (click)="startEdit()">
+      Edit profile
+    </button>
   </div>
 
   <ng-template #registerRequired>
@@ -17,7 +24,46 @@
   </ng-template>
 
   <p *ngIf="isLoading" class="state">Loading profile...</p>
+  <p *ngIf="successMessage" class="state success">{{ successMessage }}</p>
   <p *ngIf="errorMessage" class="state error">{{ errorMessage }}</p>
+
+  <div *ngIf="selectedProfile && !isLoading && isEditing" class="profile-editor">
+    <h3>Edit profile</h3>
+    <label for="firstName">First name</label>
+    <input id="firstName" type="text" [(ngModel)]="editableProfile.firstName" name="firstName">
+
+    <label for="lastName">Last name</label>
+    <input id="lastName" type="text" [(ngModel)]="editableProfile.lastName" name="lastName">
+
+    <div class="image-field">
+      <span>Profile image</span>
+      <div
+        class="drop-zone"
+        [class.active]="imageDragActive"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)">
+        <input type="file" accept="image/*" (change)="onFileSelected($event)">
+        <p>Drag and drop an image here or click to choose a file.</p>
+      </div>
+
+      <div *ngIf="editableProfile.profileImage" class="image-preview">
+        <img [src]="editableProfile.profileImage" alt="Profile preview">
+        <button type="button" class="secondary-button" (click)="removeImage()">Remove image</button>
+      </div>
+    </div>
+
+    <label for="motto">Motto</label>
+    <input id="motto" type="text" [(ngModel)]="editableProfile.motto" name="motto">
+
+    <label for="biography">Biography</label>
+    <textarea id="biography" [(ngModel)]="editableProfile.biography" name="biography" rows="5"></textarea>
+
+    <div class="editor-actions">
+      <button type="button" (click)="saveProfile()" [disabled]="isLoading">Save profile</button>
+      <button type="button" class="secondary-button" (click)="cancelEdit()" [disabled]="isLoading">Cancel</button>
+    </div>
+  </div>
 
   <div *ngIf="selectedProfile && !isLoading" class="profile-card">
     <div class="profile-image-wrapper">

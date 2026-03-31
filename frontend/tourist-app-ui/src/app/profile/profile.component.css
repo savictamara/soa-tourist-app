@@ -24,7 +24,7 @@ h2 {
 
 .profile-form {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 0.75rem;
   align-items: end;
   margin-top: 1rem;
@@ -56,6 +56,11 @@ button {
   cursor: pointer;
 }
 
+.secondary-button {
+  background: #ffc1d6;
+  color: #8d3f5f;
+}
+
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -72,6 +77,97 @@ button:disabled {
 .state.error {
   background: #ffe3e8;
   color: #b34366;
+}
+
+.state.success {
+  background: #e4faee;
+  color: #2f8052;
+}
+
+.profile-editor {
+  margin-top: 1rem;
+  padding: 1.25rem;
+  border-radius: 18px;
+  background: white;
+  border: 1px solid #f7d8e3;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.profile-editor h3 {
+  margin: 0 0 0.5rem;
+  color: #a8486e;
+}
+
+.profile-editor label {
+  color: #7c5062;
+  font-weight: 600;
+}
+
+.profile-editor input,
+.profile-editor textarea {
+  width: 100%;
+  border: 1px solid #f0bfd1;
+  border-radius: 14px;
+  padding: 0.75rem 0.9rem;
+  background: white;
+  font: inherit;
+}
+
+.profile-editor textarea {
+  resize: vertical;
+}
+
+.image-field {
+  display: grid;
+  gap: 0.45rem;
+  color: #7c5062;
+  font-weight: 600;
+}
+
+.drop-zone {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 140px;
+  padding: 1rem;
+  border: 2px dashed #f0bfd1;
+  border-radius: 18px;
+  background: #fff4f8;
+  text-align: center;
+  color: #8e6172;
+}
+
+.drop-zone.active {
+  border-color: #ef7fa8;
+  background: #ffe8f1;
+}
+
+.drop-zone input[type='file'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.image-preview {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.image-preview img {
+  width: min(240px, 100%);
+  height: 240px;
+  object-fit: cover;
+  border-radius: 20px;
+  border: 1px solid #f0bfd1;
+  background: white;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .profile-card {
