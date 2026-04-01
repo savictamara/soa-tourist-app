@@ -56,11 +56,11 @@ public class AuthService : IAuthService
             Email = email,
             Role = role,
             IsBlocked = false,
-            FirstName = request.FirstName?.Trim() ?? string.Empty,
-            LastName = request.LastName?.Trim() ?? string.Empty,
-            ProfileImage = string.IsNullOrWhiteSpace(request.ProfileImage) ? null : request.ProfileImage.Trim(),
-            Biography = string.IsNullOrWhiteSpace(request.Biography) ? null : request.Biography.Trim(),
-            Motto = string.IsNullOrWhiteSpace(request.Motto) ? null : request.Motto.Trim()
+            FirstName = string.Empty,
+            LastName = string.Empty,
+            ProfileImage = null,
+            Biography = null,
+            Motto = null
         };
 
         user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
