@@ -11,4 +11,18 @@ public interface IBlogService
         string role,
         CreateBlogPostRequestDto request,
         CancellationToken cancellationToken = default);
+
+    Task<BlogCommentResponseDto> AddCommentAsync(
+        long blogPostId,
+        string username,
+        string role,
+        CreateBlogCommentRequestDto request,
+        CancellationToken cancellationToken = default);
+
+    Task<BlogCommentResponseDto> UpdateCommentAsync(
+        long blogPostId,
+        long commentId,
+        string username,
+        UpdateBlogCommentRequestDto request,
+        CancellationToken cancellationToken = default);
 }

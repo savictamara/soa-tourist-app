@@ -34,5 +34,10 @@ public class BlogPostConfiguration : IEntityTypeConfiguration<BlogPost>
             .WithOne(image => image.BlogPost)
             .HasForeignKey(image => image.BlogPostId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(post => post.Comments)
+            .WithOne(comment => comment.BlogPost)
+            .HasForeignKey(comment => comment.BlogPostId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

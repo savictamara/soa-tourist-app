@@ -48,6 +48,72 @@
       <div *ngIf="blog.imageUrls.length > 1" class="carousel-counter">
         {{ currentBlogImageIndex(blog) + 1 }} / {{ blog.imageUrls.length }}
       </div>
+
+      <section class="comments-section">
+        <div class="comments-header">
+          <h4>Comments</h4>
+          <span class="comments-count">{{ blog.comments.length }}</span>
+        </div>
+
+        <div *ngIf="blog.comments.length === 0" class="comments-empty">
+          <p class="comments-empty-title">No comments yet</p>
+          <p class="comments-empty-text">Be the first to leave a note on this post.</p>
+        </div>
+
+        <div *ngFor="let comment of blog.comments" class="comment-card">
+          <div class="comment-meta">
+            <div class="comment-author-block">
+              <strong>{{ comment.authorUsername }}</strong>
+              <span class="comment-role">{{ comment.authorRole }}</span>
+            </div>
+          </div>
+          <p class="comment-text">{{ comment.text }}</p>
+          <div class="comment-footer">
+            <div class="comment-dates">
+              <span>Created: {{ comment.createdAtUtc | date:'medium' }}</span>
+              <span>Last edited: {{ comment.lastModifiedAtUtc | date:'medium' }}</span>
+            </div>
+            <button
+              *ngIf="canEditComment(comment) && !isEditingComment(blog.id, comment.id)"
+              type="button"
+              class="secondary-button comment-action"
+              (click)="beginEditComment(blog.id, comment)">
+              Edit comment
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="canManageComments()" class="comment-form">
+          <label class="comment-form-label" [for]="'comment-' + blog.id">
+            {{ editingCommentIdByBlogId[blog.id] ? 'Edit your comment' : 'Add comment' }}
+          </label>
+          <textarea
+            [id]="'comment-' + blog.id"
+            [name]="'comment-' + blog.id"
+            rows="4"
+            maxlength="2000"
+            [(ngModel)]="commentTextByBlogId[blog.id]"
+            placeholder="Write your comment here"></textarea>
+          <div class="comment-form-actions">
+            <button
+              type="button"
+              (click)="submitComment(blog)"
+              [disabled]="commentSubmittingByBlogId[blog.id] || !commentDraft(blog.id).trim()">
+              {{ commentSubmittingByBlogId[blog.id]
+                ? (editingCommentIdByBlogId[blog.id] ? 'Saving...' : 'Posting...')
+                : (editingCommentIdByBlogId[blog.id] ? 'Save comment' : 'Post comment') }}
+            </button>
+            <button
+              *ngIf="editingCommentIdByBlogId[blog.id]"
+              type="button"
+              class="secondary-button"
+              (click)="cancelCommentEdit(blog.id)"
+              [disabled]="commentSubmittingByBlogId[blog.id]">
+              Cancel edit
+            </button>
+          </div>
+        </div>
+      </section>
     </article>
   </div>
 

@@ -1,8 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { BlogPost } from '../models/blog-post.model';
+import { BlogComment, BlogPost } from '../models/blog-post.model';
 import { CreateBlogPostRequest } from '../models/create-blog-post-request.model';
+import { CreateBlogCommentRequest } from '../models/create-blog-comment-request.model';
+import { UpdateBlogCommentRequest } from '../models/update-blog-comment-request.model';
 
 @Injectable({
   providedIn: 'root'
@@ -18,5 +20,13 @@ export class BlogApiService {
 
   createBlog(request: CreateBlogPostRequest): Observable<BlogPost> {
     return this.http.post<BlogPost>(`${this.baseUrl}/blogs`, request);
+  }
+
+  createComment(blogId: number, request: CreateBlogCommentRequest): Observable<BlogComment> {
+    return this.http.post<BlogComment>(`${this.baseUrl}/blogs/${blogId}/comments`, request);
+  }
+
+  updateComment(blogId: number, commentId: number, request: UpdateBlogCommentRequest): Observable<BlogComment> {
+    return this.http.put<BlogComment>(`${this.baseUrl}/blogs/${blogId}/comments/${commentId}`, request);
   }
 }

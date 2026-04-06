@@ -59,4 +59,80 @@ public class BlogsController : ControllerBase
             return Unauthorized(new { message = exception.Message });
         }
     }
+
+    [HttpPost("{blogId:long}/comments")]
+    [Authorize(Roles = "Guide,Tourist")]
+    [ProducesResponseType(typeof(BlogCommentResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<BlogCommentResponseDto>> AddComment(
+        long blogId,
+        [FromBody] CreateBlogCommentRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name);
+        var role = User.FindFirstValue(ClaimTypes.Role);
+
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(role))
+        {
+            return Unauthorized(new { message = "Current user is not authenticated." });
+        }
+
+        try
+        {
+            var createdComment = await _blogService.AddCommentAsync(blogId, username, role, request, cancellationToken);
+            return Created($"/api/blogs/{blogId}/comments/{createdComment.Id}", createdComment);
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new { message = exception.Message });
+        }
+        catch (KeyNotFoundException exception)
+        {
+            return NotFound(new { message = exception.Message });
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            return Unauthorized(new { message = exception.Message });
+        }
+    }
+
+    [HttpPut("{blogId:long}/comments/{commentId:long}")]
+    [Authorize(Roles = "Guide,Tourist")]
+    [ProducesResponseType(typeof(BlogCommentResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<BlogCommentResponseDto>> UpdateComment(
+        long blogId,
+        long commentId,
+        [FromBody] UpdateBlogCommentRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name);
+
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return Unauthorized(new { message = "Current user is not authenticated." });
+        }
+
+        try
+        {
+            var updatedComment = await _blogService.UpdateCommentAsync(blogId, commentId, username, request, cancellationToken);
+            return Ok(updatedComment);
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new { message = exception.Message });
+        }
+        catch (KeyNotFoundException exception)
+        {
+            return NotFound(new { message = exception.Message });
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            return Unauthorized(new { message = exception.Message });
+        }
+    }
 }

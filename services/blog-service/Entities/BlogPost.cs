@@ -8,4 +8,5 @@ public class BlogPost
     public DateTime CreatedAtUtc { get; set; }
     public string AuthorUsername { get; set; } = string.Empty;
     public ICollection<BlogPostImage> Images { get; set; } = new List<BlogPostImage>();
+    public ICollection<BlogComment> Comments { get; set; } = new List<BlogComment>();
 }
