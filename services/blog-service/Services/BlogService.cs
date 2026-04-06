@@ -14,10 +14,10 @@ public class BlogService : IBlogService
         _blogRepository = blogRepository;
     }
 
-    public async Task<List<BlogPostResponseDto>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<List<BlogPostResponseDto>> GetAllAsync(string currentUsername, CancellationToken cancellationToken = default)
     {
         var posts = await _blogRepository.GetAllAsync(cancellationToken);
-        return posts.Select(MapToResponse).ToList();
+        return posts.Select(post => MapToResponse(post, currentUsername)).ToList();
     }
 
     public async Task<BlogPostResponseDto> CreateAsync(
@@ -63,7 +63,7 @@ public class BlogService : IBlogService
 
         var createdBlogPost = await _blogRepository.AddAsync(blogPost, cancellationToken);
 
-        return MapToResponse(createdBlogPost);
+        return MapToResponse(createdBlogPost, username);
     }
 
     public async Task<BlogCommentResponseDto> AddCommentAsync(
@@ -137,6 +137,69 @@ public class BlogService : IBlogService
         return MapCommentToResponse(comment);
     }
 
+    public async Task<BlogLikeStatusResponseDto> LikeAsync(
+        long blogPostId,
+        string username,
+        string role,
+        CancellationToken cancellationToken = default)
+    {
+        EnsureAllowedRole(role, "Only Guide and Tourist users can like blogs.");
+
+        var blogPost = await _blogRepository.GetByIdAsync(blogPostId, cancellationToken);
+
+        if (blogPost is null)
+        {
+            throw new KeyNotFoundException("Blog post not found.");
+        }
+
+        var existingLike = await _blogRepository.GetLikeAsync(blogPostId, username, cancellationToken);
+
+        if (existingLike is not null)
+        {
+            return CreateLikeStatus(blogPost, username);
+        }
+
+        await _blogRepository.AddLikeAsync(new BlogLike
+        {
+            BlogPostId = blogPostId,
+            Username = username,
+            CreatedAtUtc = DateTime.UtcNow
+        }, cancellationToken);
+
+        blogPost = await _blogRepository.GetByIdAsync(blogPostId, cancellationToken)
+            ?? throw new KeyNotFoundException("Blog post not found.");
+
+        return CreateLikeStatus(blogPost, username);
+    }
+
+    public async Task<BlogLikeStatusResponseDto> UnlikeAsync(
+        long blogPostId,
+        string username,
+        string role,
+        CancellationToken cancellationToken = default)
+    {
+        EnsureAllowedRole(role, "Only Guide and Tourist users can like blogs.");
+
+        var blogPost = await _blogRepository.GetByIdAsync(blogPostId, cancellationToken);
+
+        if (blogPost is null)
+        {
+            throw new KeyNotFoundException("Blog post not found.");
+        }
+
+        var existingLike = await _blogRepository.GetLikeAsync(blogPostId, username, cancellationToken);
+
+        if (existingLike is not null)
+        {
+            await _blogRepository.RemoveLikeAsync(existingLike, cancellationToken);
+        }
+
+        blogPost = await _blogRepository.GetByIdAsync(blogPostId, cancellationToken)
+            ?? throw new KeyNotFoundException("Blog post not found.");
+
+        return CreateLikeStatus(blogPost, username);
+    }
+
     private static void EnsureAllowedRole(string role, string message)
     {
         if (!AllowedRoles.Contains(role))
@@ -145,7 +208,7 @@ public class BlogService : IBlogService
         }
     }
 
-    private static BlogPostResponseDto MapToResponse(BlogPost post)
+    private static BlogPostResponseDto MapToResponse(BlogPost post, string currentUsername)
     {
         return new BlogPostResponseDto
         {
@@ -155,11 +218,23 @@ public class BlogService : IBlogService
             CreatedAtUtc = post.CreatedAtUtc,
             AuthorUsername = post.AuthorUsername,
             ImageUrls = post.Images.Select(image => image.ImageUrl).ToList(),
+            LikesCount = post.Likes.Count,
+            IsLikedByCurrentUser = post.Likes.Any(like => like.Username == currentUsername),
             Comments = post.Comments
                 .OrderByDescending(comment => comment.CreatedAtUtc)
                 .ThenByDescending(comment => comment.Id)
                 .Select(MapCommentToResponse)
                 .ToList()
+        };
+    }
+
+    private static BlogLikeStatusResponseDto CreateLikeStatus(BlogPost blogPost, string currentUsername)
+    {
+        return new BlogLikeStatusResponseDto
+        {
+            BlogPostId = blogPost.Id,
+            LikesCount = blogPost.Likes.Count,
+            IsLikedByCurrentUser = blogPost.Likes.Any(like => like.Username == currentUsername)
         };
     }
 

@@ -265,6 +265,55 @@ button:disabled {
   text-align: right;
 }
 
+.blog-actions {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.like-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: #fff;
+  color: #a8486e;
+  border: 1px solid #f0bfd1;
+  box-shadow: 0 6px 18px rgba(222, 143, 171, 0.12);
+}
+
+.like-button.active {
+  background: #ef7fa8;
+  color: #fff;
+  border-color: #ef7fa8;
+}
+
+.like-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.likes-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #8d3f5f;
+  font-weight: 600;
+}
+
+.likes-count {
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.7rem;
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+  background: #ffe3ee;
+  color: #a8486e;
+}
+
 .comments-section {
   margin-top: 1.4rem;
   padding-top: 1.25rem;

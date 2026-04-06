@@ -49,6 +49,23 @@
         {{ currentBlogImageIndex(blog) + 1 }} / {{ blog.imageUrls.length }}
       </div>
 
+      <div class="blog-actions">
+        <button
+          *ngIf="canCreateBlog"
+          type="button"
+          class="like-button"
+          [class.active]="blog.isLikedByCurrentUser"
+          (click)="toggleLike(blog)"
+          [disabled]="likeSubmittingByBlogId[blog.id]">
+          <span class="like-icon">{{ blog.isLikedByCurrentUser ? '♥' : '♡' }}</span>
+          <span>{{ blog.isLikedByCurrentUser ? 'Liked' : 'Like' }}</span>
+        </button>
+        <div class="likes-display">
+          <span class="likes-count">{{ blog.likesCount }}</span>
+          <span>{{ blog.likesCount === 1 ? 'like' : 'likes' }}</span>
+        </div>
+      </div>
+
       <section class="comments-section">
         <div class="comments-header">
           <h4>Comments</h4>

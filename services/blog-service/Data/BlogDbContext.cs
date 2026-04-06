@@ -12,6 +12,7 @@ public class BlogDbContext : DbContext
     public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
     public DbSet<BlogPostImage> BlogPostImages => Set<BlogPostImage>();
     public DbSet<BlogComment> BlogComments => Set<BlogComment>();
+    public DbSet<BlogLike> BlogLikes => Set<BlogLike>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

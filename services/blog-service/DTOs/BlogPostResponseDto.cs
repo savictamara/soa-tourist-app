@@ -8,5 +8,7 @@ public class BlogPostResponseDto
     public DateTime CreatedAtUtc { get; set; }
     public string AuthorUsername { get; set; } = string.Empty;
     public List<string> ImageUrls { get; set; } = [];
+    public int LikesCount { get; set; }
+    public bool IsLikedByCurrentUser { get; set; }
     public List<BlogCommentResponseDto> Comments { get; set; } = [];
 }

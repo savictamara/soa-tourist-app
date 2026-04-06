@@ -24,7 +24,14 @@ public class BlogsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<List<BlogPostResponseDto>>> GetAll(CancellationToken cancellationToken)
     {
-        var posts = await _blogService.GetAllAsync(cancellationToken);
+        var username = User.FindFirstValue(ClaimTypes.Name);
+
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return Unauthorized(new { message = "Current user is not authenticated." });
+        }
+
+        var posts = await _blogService.GetAllAsync(username, cancellationToken);
         return Ok(posts);
     }
 
@@ -53,6 +60,70 @@ public class BlogsController : ControllerBase
         catch (ArgumentException exception)
         {
             return BadRequest(new { message = exception.Message });
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            return Unauthorized(new { message = exception.Message });
+        }
+    }
+
+    [HttpPost("{blogId:long}/likes")]
+    [Authorize(Roles = "Guide,Tourist")]
+    [ProducesResponseType(typeof(BlogLikeStatusResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<BlogLikeStatusResponseDto>> Like(
+        long blogId,
+        CancellationToken cancellationToken)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name);
+        var role = User.FindFirstValue(ClaimTypes.Role);
+
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(role))
+        {
+            return Unauthorized(new { message = "Current user is not authenticated." });
+        }
+
+        try
+        {
+            var status = await _blogService.LikeAsync(blogId, username, role, cancellationToken);
+            return Ok(status);
+        }
+        catch (KeyNotFoundException exception)
+        {
+            return NotFound(new { message = exception.Message });
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            return Unauthorized(new { message = exception.Message });
+        }
+    }
+
+    [HttpDelete("{blogId:long}/likes")]
+    [Authorize(Roles = "Guide,Tourist")]
+    [ProducesResponseType(typeof(BlogLikeStatusResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<BlogLikeStatusResponseDto>> Unlike(
+        long blogId,
+        CancellationToken cancellationToken)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name);
+        var role = User.FindFirstValue(ClaimTypes.Role);
+
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(role))
+        {
+            return Unauthorized(new { message = "Current user is not authenticated." });
+        }
+
+        try
+        {
+            var status = await _blogService.UnlikeAsync(blogId, username, role, cancellationToken);
+            return Ok(status);
+        }
+        catch (KeyNotFoundException exception)
+        {
+            return NotFound(new { message = exception.Message });
         }
         catch (UnauthorizedAccessException exception)
         {

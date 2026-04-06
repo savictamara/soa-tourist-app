@@ -14,5 +14,7 @@ export interface BlogPost {
   createdAtUtc: string;
   authorUsername: string;
   imageUrls: string[];
+  likesCount: number;
+  isLikedByCurrentUser: boolean;
   comments: BlogComment[];
 }

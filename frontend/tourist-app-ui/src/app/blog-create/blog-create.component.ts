@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { BlogApiService } from '../services/blog-api.service';
 import { AuthStateService } from '../services/auth-state.service';
+import { BlogLikeStatus } from '../models/blog-like-status.model';
 import { BlogComment, BlogPost } from '../models/blog-post.model';
 import { CreateBlogCommentRequest } from '../models/create-blog-comment-request.model';
 import { CreateBlogPostRequest } from '../models/create-blog-post-request.model';
@@ -28,6 +29,7 @@ export class BlogCreateComponent implements OnInit {
   commentTextByBlogId: Record<number, string> = {};
   commentSubmittingByBlogId: Record<number, boolean> = {};
   editingCommentIdByBlogId: Record<number, number | null> = {};
+  likeSubmittingByBlogId: Record<number, boolean> = {};
 
   constructor(
     private readonly blogApiService: BlogApiService,
@@ -96,7 +98,12 @@ export class BlogCreateComponent implements OnInit {
 
     this.blogApiService.createBlog(request).subscribe({
       next: (createdBlog) => {
-        this.blogs = [{ ...createdBlog, comments: createdBlog.comments ?? [] }, ...this.blogs];
+        this.blogs = [{
+          ...createdBlog,
+          likesCount: createdBlog.likesCount ?? 0,
+          isLikedByCurrentUser: createdBlog.isLikedByCurrentUser ?? false,
+          comments: createdBlog.comments ?? []
+        }, ...this.blogs];
         this.currentImageIndexByBlogId[createdBlog.id] = 0;
         this.successMessage = 'Blog created successfully.';
         this.form = {
@@ -145,6 +152,31 @@ export class BlogCreateComponent implements OnInit {
 
   canManageComments(): boolean {
     return this.canCreateBlog;
+  }
+
+  toggleLike(blog: BlogPost): void {
+    if (!this.canCreateBlog || this.likeSubmittingByBlogId[blog.id]) {
+      return;
+    }
+
+    this.likeSubmittingByBlogId[blog.id] = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    const request$ = blog.isLikedByCurrentUser
+      ? this.blogApiService.unlikeBlog(blog.id)
+      : this.blogApiService.likeBlog(blog.id);
+
+    request$.subscribe({
+      next: (status) => {
+        this.applyLikeStatus(status);
+        this.likeSubmittingByBlogId[blog.id] = false;
+      },
+      error: (error) => {
+        this.likeSubmittingByBlogId[blog.id] = false;
+        this.errorMessage = error.error?.message ?? 'Could not update like.';
+      }
+    });
   }
 
   commentDraft(blogId: number): string {
@@ -332,6 +364,8 @@ export class BlogCreateComponent implements OnInit {
       next: (blogs) => {
         this.blogs = blogs.map(blog => ({
           ...blog,
+          likesCount: blog.likesCount ?? 0,
+          isLikedByCurrentUser: blog.isLikedByCurrentUser ?? false,
           comments: blog.comments ?? []
         }));
         this.currentImageIndexByBlogId = {};
@@ -415,6 +449,18 @@ export class BlogCreateComponent implements OnInit {
             comments: (blog.comments ?? []).map(comment =>
               comment.id === updatedComment.id ? updatedComment : comment
             )
+          }
+        : blog
+    );
+  }
+
+  private applyLikeStatus(status: BlogLikeStatus): void {
+    this.blogs = this.blogs.map(blog =>
+      blog.id === status.blogPostId
+        ? {
+            ...blog,
+            likesCount: status.likesCount,
+            isLikedByCurrentUser: status.isLikedByCurrentUser
           }
         : blog
     );

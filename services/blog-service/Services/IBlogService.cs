@@ -4,7 +4,7 @@ namespace BlogService.Services;
 
 public interface IBlogService
 {
-    Task<List<BlogPostResponseDto>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<List<BlogPostResponseDto>> GetAllAsync(string currentUsername, CancellationToken cancellationToken = default);
 
     Task<BlogPostResponseDto> CreateAsync(
         string username,
@@ -24,5 +24,17 @@ public interface IBlogService
         long commentId,
         string username,
         UpdateBlogCommentRequestDto request,
+        CancellationToken cancellationToken = default);
+
+    Task<BlogLikeStatusResponseDto> LikeAsync(
+        long blogPostId,
+        string username,
+        string role,
+        CancellationToken cancellationToken = default);
+
+    Task<BlogLikeStatusResponseDto> UnlikeAsync(
+        long blogPostId,
+        string username,
+        string role,
         CancellationToken cancellationToken = default);
 }
