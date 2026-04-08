@@ -1,21 +1,81 @@
-version: "3.9"
-
 services:
+  stakeholders-db:
+    image: postgres:16-alpine
+    container_name: stakeholders-db
+    restart: always
+    environment:
+      POSTGRES_DB: stakeholders_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - stakeholders-db-data:/var/lib/postgresql/data
+      - ./seed/stakeholders-init-data.sql:/tmp/stakeholders-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d stakeholders_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5433:5432"
+    networks:
+      - database
+
+  blog-db:
+    image: postgres:16-alpine
+    container_name: blog-db
+    restart: always
+    environment:
+      POSTGRES_DB: blog_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    volumes:
+      - blog-db-data:/var/lib/postgresql/data
+      - ./seed/blog-init-data.sql:/tmp/blog-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d blog_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5434:5432"
+    networks:
+      - database
+
   stakeholders-service:
     build:
       context: .
       dockerfile: services/stakeholders-service/Dockerfile
     container_name: stakeholders-service
+    restart: on-failure
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=stakeholders-db;Port=5432;Database=stakeholders_db;Username=postgres;Password=postgres
+    depends_on:
+      stakeholders-db:
+        condition: service_healthy
     ports:
-      - "8081:8080"
+      - "5001:8080"
+    networks:
+      - application
+      - database
 
   blog-service:
     build:
       context: .
       dockerfile: services/blog-service/Dockerfile
     container_name: blog-service
+    restart: on-failure
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=blog-db;Port=5432;Database=blog_db;Username=postgres;Password=root
+    depends_on:
+      blog-db:
+        condition: service_healthy
     ports:
-      - "8082:8080"
+      - "5002:8080"
+    networks:
+      - application
+      - database
 
   tourist-app-ui:
     image: node:18-alpine
@@ -29,3 +89,13 @@ services:
     depends_on:
       - stakeholders-service
       - blog-service
+    networks:
+      - application
+
+volumes:
+  stakeholders-db-data:
+  blog-db-data:
+
+networks:
+  application:
+  database:

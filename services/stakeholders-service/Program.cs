@@ -1,9 +1,7 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using StakeholdersService.Data;
-using StakeholdersService.Entities;
 using StakeholdersService.Models;
 using StakeholdersService.Repositories;
 using StakeholdersService.Services;
@@ -58,37 +56,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersDbContext>();
-    dbContext.Database.Migrate();
-    dbContext.Database.ExecuteSqlRaw("ALTER TABLE users ALTER COLUMN \"ProfileImage\" TYPE text;");
-
-    if (!dbContext.Users.Any(user => user.Username == "admin"))
-    {
-        var adminUser = new User
-        {
-            Username = "admin",
-            Email = "admin@stakeholders.local",
-            Role = "Administrator",
-            IsBlocked = false,
-            FirstName = "System",
-            LastName = "Admin"
-        };
-
-        var passwordHasher = new PasswordHasher<User>();
-        adminUser.PasswordHash = passwordHasher.HashPassword(adminUser, "admin123");
-
-        dbContext.Users.Add(adminUser);
-        dbContext.SaveChanges();
-    }
-}
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 app.UseCors(allowAngularClientPolicy);

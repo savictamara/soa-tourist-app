@@ -7,6 +7,12 @@ RUN dotnet restore BlogService.csproj
 COPY services/blog-service/. ./
 RUN dotnet publish BlogService.csproj -c Release -o /app/publish /p:UseAppHost=false
 
+FROM build AS migration
+WORKDIR /src
+RUN dotnet tool install --global dotnet-ef --version 8.*
+ENV PATH="${PATH}:/root/.dotnet/tools"
+ENTRYPOINT ["dotnet", "ef", "database", "update", "--project", "BlogService.csproj", "--startup-project", "BlogService.csproj"]
+
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish ./

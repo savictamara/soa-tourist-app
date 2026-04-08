@@ -1,10 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using StakeholdersService.Data;
 
 #nullable disable
 
 namespace StakeholdersService.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(StakeholdersDbContext))]
+    [Migration("20260330155000_ExpandProfileImageStorage")]
     public partial class ExpandProfileImageStorage : Migration
     {
         /// <inheritdoc />

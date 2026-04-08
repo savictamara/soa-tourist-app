@@ -54,18 +54,8 @@ builder.Services.AddScoped<IBlogService, BlogService.Services.BlogService>();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<BlogDbContext>();
-    dbContext.Database.Migrate();
-    dbContext.Database.ExecuteSqlRaw("ALTER TABLE blog_post_images ALTER COLUMN \"ImageUrl\" TYPE text;");
-}
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 app.UseCors(allowAngularClientPolicy);

@@ -1,0 +1,29 @@
+services:
+  stakeholders-migration:
+    build:
+      context: .
+      dockerfile: services/stakeholders-service/Dockerfile
+      target: migration
+    container_name: stakeholders-migration
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=stakeholders-db;Port=5432;Database=stakeholders_db;Username=postgres;Password=postgres
+    networks:
+      - database
+
+  blog-migration:
+    build:
+      context: .
+      dockerfile: services/blog-service/Dockerfile
+      target: migration
+    container_name: blog-migration
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=blog-db;Port=5432;Database=blog_db;Username=postgres;Password=root
+    networks:
+      - database
+
+networks:
+  database:
+    external: true
+    name: soa-tourist-app_database

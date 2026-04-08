@@ -1,0 +1,9 @@
+.git
+.gitignore
+.vs
+**/bin
+**/obj
+**/bin-temp
+**/node_modules
+frontend/tourist-app-ui/dist
+docker-compose-NET.md
