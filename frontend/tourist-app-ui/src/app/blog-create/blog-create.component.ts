@@ -1,8 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { BlogApiService } from '../services/blog-api.service';
 import { AuthStateService } from '../services/auth-state.service';
-import { BlogPost } from '../models/blog-post.model';
+import { BlogLikeStatus } from '../models/blog-like-status.model';
+import { BlogComment, BlogPost } from '../models/blog-post.model';
+import { CreateBlogCommentRequest } from '../models/create-blog-comment-request.model';
 import { CreateBlogPostRequest } from '../models/create-blog-post-request.model';
+import { UpdateBlogCommentRequest } from '../models/update-blog-comment-request.model';
 
 @Component({
   selector: 'app-blog-create',
@@ -23,6 +26,10 @@ export class BlogCreateComponent implements OnInit {
   successMessage = '';
   blogs: BlogPost[] = [];
   currentImageIndexByBlogId: Record<number, number> = {};
+  commentTextByBlogId: Record<number, string> = {};
+  commentSubmittingByBlogId: Record<number, boolean> = {};
+  editingCommentIdByBlogId: Record<number, number | null> = {};
+  likeSubmittingByBlogId: Record<number, boolean> = {};
 
   constructor(
     private readonly blogApiService: BlogApiService,
@@ -91,7 +98,12 @@ export class BlogCreateComponent implements OnInit {
 
     this.blogApiService.createBlog(request).subscribe({
       next: (createdBlog) => {
-        this.blogs = [createdBlog, ...this.blogs];
+        this.blogs = [{
+          ...createdBlog,
+          likesCount: createdBlog.likesCount ?? 0,
+          isLikedByCurrentUser: createdBlog.isLikedByCurrentUser ?? false,
+          comments: createdBlog.comments ?? []
+        }, ...this.blogs];
         this.currentImageIndexByBlogId[createdBlog.id] = 0;
         this.successMessage = 'Blog created successfully.';
         this.form = {
@@ -136,6 +148,113 @@ export class BlogCreateComponent implements OnInit {
 
   renderedBlogMarkdown(markdown: string): string {
     return this.renderMarkdown(markdown);
+  }
+
+  canManageComments(): boolean {
+    return this.canCreateBlog;
+  }
+
+  toggleLike(blog: BlogPost): void {
+    if (!this.canCreateBlog || this.likeSubmittingByBlogId[blog.id]) {
+      return;
+    }
+
+    this.likeSubmittingByBlogId[blog.id] = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    const request$ = blog.isLikedByCurrentUser
+      ? this.blogApiService.unlikeBlog(blog.id)
+      : this.blogApiService.likeBlog(blog.id);
+
+    request$.subscribe({
+      next: (status) => {
+        this.applyLikeStatus(status);
+        this.likeSubmittingByBlogId[blog.id] = false;
+      },
+      error: (error) => {
+        this.likeSubmittingByBlogId[blog.id] = false;
+        this.errorMessage = error.error?.message ?? 'Could not update like.';
+      }
+    });
+  }
+
+  commentDraft(blogId: number): string {
+    return this.commentTextByBlogId[blogId] ?? '';
+  }
+
+  isEditingComment(blogId: number, commentId: number): boolean {
+    return this.editingCommentIdByBlogId[blogId] === commentId;
+  }
+
+  canEditComment(comment: BlogComment): boolean {
+    return comment.authorUsername === this.authStateService.currentUser?.username;
+  }
+
+  beginEditComment(blogId: number, comment: BlogComment): void {
+    this.editingCommentIdByBlogId[blogId] = comment.id;
+    this.commentTextByBlogId[blogId] = comment.text;
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+  cancelCommentEdit(blogId: number): void {
+    this.editingCommentIdByBlogId[blogId] = null;
+    this.commentTextByBlogId[blogId] = '';
+  }
+
+  submitComment(blog: BlogPost): void {
+    if (!this.canManageComments()) {
+      this.errorMessage = 'Only Guide and Tourist users can comment on blogs.';
+      this.successMessage = '';
+      return;
+    }
+
+    const text = this.commentDraft(blog.id).trim();
+
+    if (!text) {
+      this.errorMessage = 'Comment text is required.';
+      this.successMessage = '';
+      return;
+    }
+
+    this.commentSubmittingByBlogId[blog.id] = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    const editingCommentId = this.editingCommentIdByBlogId[blog.id];
+
+    if (editingCommentId) {
+      const updateRequest: UpdateBlogCommentRequest = { text };
+      this.blogApiService.updateComment(blog.id, editingCommentId, updateRequest).subscribe({
+        next: (updatedComment) => {
+          this.updateBlogComment(blog.id, updatedComment);
+          this.commentSubmittingByBlogId[blog.id] = false;
+          this.editingCommentIdByBlogId[blog.id] = null;
+          this.commentTextByBlogId[blog.id] = '';
+          this.successMessage = 'Comment updated successfully.';
+        },
+        error: (error) => {
+          this.commentSubmittingByBlogId[blog.id] = false;
+          this.errorMessage = error.error?.message ?? 'Could not update comment.';
+        }
+      });
+      return;
+    }
+
+    const createRequest: CreateBlogCommentRequest = { text };
+    this.blogApiService.createComment(blog.id, createRequest).subscribe({
+      next: (createdComment) => {
+        this.prependBlogComment(blog.id, createdComment);
+        this.commentSubmittingByBlogId[blog.id] = false;
+        this.commentTextByBlogId[blog.id] = '';
+        this.successMessage = 'Comment created successfully.';
+      },
+      error: (error) => {
+        this.commentSubmittingByBlogId[blog.id] = false;
+        this.errorMessage = error.error?.message ?? 'Could not create comment.';
+      }
+    });
   }
 
   currentBlogImage(blog: BlogPost): string {
@@ -243,7 +362,12 @@ export class BlogCreateComponent implements OnInit {
 
     this.blogApiService.getBlogs().subscribe({
       next: (blogs) => {
-        this.blogs = blogs;
+        this.blogs = blogs.map(blog => ({
+          ...blog,
+          likesCount: blog.likesCount ?? 0,
+          isLikedByCurrentUser: blog.isLikedByCurrentUser ?? false,
+          comments: blog.comments ?? []
+        }));
         this.currentImageIndexByBlogId = {};
         blogs.forEach(blog => {
           this.currentImageIndexByBlogId[blog.id] = 0;
@@ -307,5 +431,38 @@ export class BlogCreateComponent implements OnInit {
     };
 
     image.src = imageSource;
+  }
+
+  private prependBlogComment(blogId: number, createdComment: BlogComment): void {
+    this.blogs = this.blogs.map(blog =>
+      blog.id === blogId
+        ? { ...blog, comments: [createdComment, ...(blog.comments ?? [])] }
+        : blog
+    );
+  }
+
+  private updateBlogComment(blogId: number, updatedComment: BlogComment): void {
+    this.blogs = this.blogs.map(blog =>
+      blog.id === blogId
+        ? {
+            ...blog,
+            comments: (blog.comments ?? []).map(comment =>
+              comment.id === updatedComment.id ? updatedComment : comment
+            )
+          }
+        : blog
+    );
+  }
+
+  private applyLikeStatus(status: BlogLikeStatus): void {
+    this.blogs = this.blogs.map(blog =>
+      blog.id === status.blogPostId
+        ? {
+            ...blog,
+            likesCount: status.likesCount,
+            isLikedByCurrentUser: status.isLikedByCurrentUser
+          }
+        : blog
+    );
   }
 }
