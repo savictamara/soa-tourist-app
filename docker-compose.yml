@@ -45,6 +45,7 @@ services:
     build:
       context: .
       dockerfile: services/stakeholders-service/Dockerfile
+      target: final
     container_name: stakeholders-service
     restart: on-failure
     environment:
@@ -63,6 +64,7 @@ services:
     build:
       context: .
       dockerfile: services/blog-service/Dockerfile
+      target: final
     container_name: blog-service
     restart: on-failure
     environment:
@@ -78,12 +80,10 @@ services:
       - database
 
   tourist-app-ui:
-    image: node:18-alpine
+    build:
+      context: ./frontend/tourist-app-ui
+      dockerfile: Dockerfile
     container_name: tourist-app-ui
-    working_dir: /app
-    command: sh -c "cd frontend/tourist-app-ui && npm install && npm start -- --host 0.0.0.0 --port 4200"
-    volumes:
-      - ./:/app
     ports:
       - "4200:4200"
     depends_on:
