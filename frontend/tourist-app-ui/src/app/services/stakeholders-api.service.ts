@@ -12,7 +12,7 @@ import { UpdateUserProfileRequest } from '../models/update-user-profile-request.
   providedIn: 'root'
 })
 export class StakeholdersApiService {
-  private readonly baseUrl = 'http://localhost:5001/api';
+  private readonly baseUrl = 'http://localhost:8080/api';
 
   constructor(private readonly http: HttpClient) {}
 

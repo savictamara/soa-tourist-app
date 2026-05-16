@@ -78,8 +78,6 @@ services:
     depends_on:
       stakeholders-db:
         condition: service_healthy
-    ports:
-      - "5001:8080"
     networks:
       - application
       - database
@@ -97,8 +95,6 @@ services:
     depends_on:
       blog-db:
         condition: service_healthy
-    ports:
-      - "5002:8080"
     networks:
       - application
       - database
@@ -113,8 +109,6 @@ services:
       MONGO_URI: mongodb://tour-mongo:27017
     depends_on:
       - tour-mongo
-    ports:
-      - "8085:8085"
     networks:
       - application
       - database
@@ -122,8 +116,6 @@ services:
   follower-service:
     build: ./services/follower-service
     container_name: follower-service
-    ports:
-      - "8086:8086"
     environment:
       - SPRING_NEO4J_URI=bolt://follower-neo4j:7687
       - SPRING_NEO4J_AUTHENTICATION_USERNAME=neo4j
@@ -134,6 +126,21 @@ services:
       - application
       - database
 
+  api-gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:80"
+    depends_on:
+      - stakeholders-service
+      - blog-service
+      - tour-service
+      - follower-service
+    networks:
+      - application
+
   tourist-app-ui:
     build:
       context: ./frontend/tourist-app-ui
@@ -142,10 +149,7 @@ services:
     ports:
       - "4200:4200"
     depends_on:
-      - stakeholders-service
-      - blog-service
-      - tour-service
-      - follower-service
+      - api-gateway
     networks:
       - application
 

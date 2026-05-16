@@ -7,7 +7,7 @@ import { FollowRequest, FollowerUser } from '../models/follower.model';
   providedIn: 'root'
 })
 export class FollowerApiService {
-  private readonly baseUrl = 'http://localhost:8086/api/followers';
+  private readonly baseUrl = 'http://localhost:8080/api/followers';
 
   constructor(private readonly http: HttpClient) {}
 
