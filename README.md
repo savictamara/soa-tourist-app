@@ -1,6 +1,6 @@
 # soa-tourist-app
 
-KT1 SOA tourist application monorepo.
+SOA tourist application
 
 ## Structure
 

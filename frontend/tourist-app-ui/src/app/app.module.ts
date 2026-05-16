@@ -11,6 +11,7 @@ import { ProfileComponent } from './profile/profile.component';
 import { RegisterComponent } from './register/register.component';
 import { UsersComponent } from './users/users.component';
 import { BlogCreateComponent } from './blog-create/blog-create.component';
+import { TourAuthorComponent } from './tour-author/tour-author.component';
 
 @NgModule({
   declarations: [
@@ -19,7 +20,8 @@ import { BlogCreateComponent } from './blog-create/blog-create.component';
     ProfileComponent,
     RegisterComponent,
     UsersComponent,
-    BlogCreateComponent
+    BlogCreateComponent,
+    TourAuthorComponent
   ],
   imports: [
     BrowserModule,

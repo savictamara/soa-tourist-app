@@ -41,6 +41,17 @@ services:
     networks:
       - database
 
+  tour-mongo:
+    image: mongo:7
+    container_name: tour-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - tour-mongo-data:/data/db
+    networks:
+      - database
+
   stakeholders-service:
     build:
       context: .
@@ -79,6 +90,22 @@ services:
       - application
       - database
 
+  tour-service:
+    build:
+      context: .
+      dockerfile: services/tour-service/Dockerfile
+    container_name: tour-service
+    restart: on-failure
+    environment:
+      MONGO_URI: mongodb://tour-mongo:27017
+    depends_on:
+      - tour-mongo
+    ports:
+      - "8085:8085"
+    networks:
+      - application
+      - database
+
   tourist-app-ui:
     build:
       context: ./frontend/tourist-app-ui
@@ -89,12 +116,14 @@ services:
     depends_on:
       - stakeholders-service
       - blog-service
+      - tour-service
     networks:
       - application
 
 volumes:
   stakeholders-db-data:
   blog-db-data:
+  tour-mongo-data:
 
 networks:
   application:

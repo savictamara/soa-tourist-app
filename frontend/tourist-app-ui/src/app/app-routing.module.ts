@@ -9,6 +9,8 @@ import { RegisterComponent } from './register/register.component';
 import { ProfileComponent } from './profile/profile.component';
 import { UsersComponent } from './users/users.component';
 import { BlogCreateComponent } from './blog-create/blog-create.component';
+import { TourAuthorComponent } from './tour-author/tour-author.component';
+import { TourAuthorGuard } from './guards/tour-author.guard';
 
 const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -16,6 +18,7 @@ const routes: Routes = [
   { path: 'register', component: RegisterComponent },
   { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
   { path: 'blogs', component: BlogCreateComponent, canActivate: [BlogUserGuard] },
+  { path: 'tours', component: TourAuthorComponent, canActivate: [TourAuthorGuard] },
   { path: 'users', component: UsersComponent, canActivate: [AdminGuard] }
 ];
 
