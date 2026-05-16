@@ -18,6 +18,15 @@ public class UsersController : ControllerBase
         _userService = userService;
     }
 
+    [HttpGet("public")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(List<PublicUserDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<PublicUserDto>>> GetPublic(CancellationToken cancellationToken)
+    {
+        var users = await _userService.GetPublicUsersAsync(cancellationToken);
+        return Ok(users);
+    }
+
     [HttpGet]
     [Authorize(Roles = "Administrator")]
     [ProducesResponseType(typeof(List<UserResponseDto>), StatusCodes.Status200OK)]

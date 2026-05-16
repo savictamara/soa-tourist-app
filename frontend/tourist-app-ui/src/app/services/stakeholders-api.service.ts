@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { AuthResponse } from '../models/auth-response.model';
 import { LoginRequest } from '../models/login-request.model';
 import { RegisterRequest } from '../models/register-request.model';
-import { User } from '../models/user.model';
+import { PublicUser, User } from '../models/user.model';
 import { UserProfile } from '../models/user-profile.model';
 import { UpdateUserProfileRequest } from '../models/update-user-profile-request.model';
 
@@ -26,6 +26,10 @@ export class StakeholdersApiService {
 
   getUsers(): Observable<User[]> {
     return this.http.get<User[]>(`${this.baseUrl}/users`);
+  }
+
+  getPublicUsers(): Observable<PublicUser[]> {
+    return this.http.get<PublicUser[]>(`${this.baseUrl}/users/public`);
   }
 
   blockUser(id: number): Observable<{ message: string }> {

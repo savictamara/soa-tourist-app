@@ -12,6 +12,8 @@ import { RegisterComponent } from './register/register.component';
 import { UsersComponent } from './users/users.component';
 import { BlogCreateComponent } from './blog-create/blog-create.component';
 import { TourAuthorComponent } from './tour-author/tour-author.component';
+import { FollowersComponent } from './followers/followers.component';
+import { TouristToursComponent } from './tourist-tours/tourist-tours.component';
 
 @NgModule({
   declarations: [
@@ -21,7 +23,9 @@ import { TourAuthorComponent } from './tour-author/tour-author.component';
     RegisterComponent,
     UsersComponent,
     BlogCreateComponent,
-    TourAuthorComponent
+    TourAuthorComponent,
+    FollowersComponent,
+    TouristToursComponent
   ],
   imports: [
     BrowserModule,

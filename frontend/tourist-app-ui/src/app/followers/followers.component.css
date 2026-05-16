@@ -1,0 +1,86 @@
+:host {
+  display: block;
+}
+
+.panel {
+  background: #fffafc;
+  border: 1px solid #ffd7e5;
+  border-radius: 24px;
+  padding: 1.5rem;
+}
+
+h2,
+h3 {
+  color: #a8486e;
+}
+
+.panel-text {
+  color: #8e6172;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.list {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.card {
+  border: 1px solid #f0bfd1;
+  border-radius: 14px;
+  background: #fff4f8;
+  padding: 0.85rem;
+}
+
+.profile-row {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.profile-row img {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid #f0bfd1;
+}
+
+.bio {
+  color: #8e6172;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  background: #ef7fa8;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.secondary-button {
+  background: #ffc1d6;
+  color: #8d3f5f;
+}
+
+.state {
+  padding: 0.75rem 0.95rem;
+  border-radius: 12px;
+  background: #fff4f8;
+}
+
+.success {
+  background: #f9ddeb;
+  color: #8d3f5f;
+}
+
+.error {
+  background: #ffe3e8;
+  color: #b34366;
+}

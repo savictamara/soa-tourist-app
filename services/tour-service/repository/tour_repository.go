@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"log"
+	"time"
 
 	"tour-service/models"
 
@@ -43,6 +44,9 @@ func (r *TourRepository) GetByID(ctx context.Context, id primitive.ObjectID) (mo
 		if tour.KeyPoints == nil {
 			tour.KeyPoints = []models.KeyPoint{}
 		}
+		if tour.Reviews == nil {
+			tour.Reviews = []models.Review{}
+		}
 	}
 	return tour, err
 }
@@ -69,6 +73,38 @@ func (r *TourRepository) GetByAuthorID(ctx context.Context, authorID string) ([]
 		if tours[i].KeyPoints == nil {
 			tours[i].KeyPoints = []models.KeyPoint{}
 		}
+		if tours[i].Reviews == nil {
+			tours[i].Reviews = []models.Review{}
+		}
+	}
+	return tours, nil
+}
+
+func (r *TourRepository) GetAll(ctx context.Context) ([]models.Tour, error) {
+	findOpts := options.Find().SetSort(bson.D{{Key: "createdAt", Value: -1}})
+	cur, err := r.collection.Find(ctx, bson.M{}, findOpts)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+
+	var tours []models.Tour
+	if err = cur.All(ctx, &tours); err != nil {
+		return nil, err
+	}
+	if tours == nil {
+		return []models.Tour{}, nil
+	}
+	for i := range tours {
+		if tours[i].Tags == nil {
+			tours[i].Tags = []string{}
+		}
+		if tours[i].KeyPoints == nil {
+			tours[i].KeyPoints = []models.KeyPoint{}
+		}
+		if tours[i].Reviews == nil {
+			tours[i].Reviews = []models.Review{}
+		}
 	}
 	return tours, nil
 }
@@ -94,4 +130,23 @@ func (r *TourRepository) AddKeyPoint(ctx context.Context, tourID primitive.Objec
 	}
 
 	return r.GetByID(ctx, tourID)
+}
+
+func (r *TourRepository) AddReview(ctx context.Context, tourID primitive.ObjectID, review models.Review, updatedAt time.Time) error {
+	update := bson.M{
+		"$push": bson.M{
+			"reviews": review,
+		},
+		"$set": bson.M{
+			"updatedAt": updatedAt,
+		},
+	}
+	res, err := r.collection.UpdateOne(ctx, bson.M{"_id": tourID}, update)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount == 0 {
+		return mongo.ErrNoDocuments
+	}
+	return nil
 }

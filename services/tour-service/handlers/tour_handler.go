@@ -82,6 +82,15 @@ func (h *TourHandler) GetToursByAuthor(c *gin.Context) {
 	c.JSON(http.StatusOK, tours)
 }
 
+func (h *TourHandler) GetTours(c *gin.Context) {
+	tours, err := h.tourService.GetAllTours(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch tours"})
+		return
+	}
+	c.JSON(http.StatusOK, tours)
+}
+
 func (h *TourHandler) AddKeyPoint(c *gin.Context) {
 	tourID, ok := parseObjectID(c, "tourId")
 	if !ok {
@@ -131,6 +140,54 @@ func (h *TourHandler) GetKeyPoints(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, keyPoints)
+}
+
+func (h *TourHandler) AddReview(c *gin.Context) {
+	tourID, ok := parseObjectID(c, "tourId")
+	if !ok {
+		return
+	}
+
+	var req models.CreateReviewRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+		return
+	}
+
+	review, err := h.tourService.AddReview(c.Request.Context(), tourID, req)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidInput) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "rating must be 1-5, comment, touristId, touristUsername and visitedDate are required"})
+			return
+		}
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "tour not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to add review"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, review)
+}
+
+func (h *TourHandler) GetReviews(c *gin.Context) {
+	tourID, ok := parseObjectID(c, "tourId")
+	if !ok {
+		return
+	}
+
+	reviews, err := h.tourService.GetReviews(c.Request.Context(), tourID)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "tour not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch reviews"})
+		return
+	}
+
+	c.JSON(http.StatusOK, reviews)
 }
 
 func parseObjectID(c *gin.Context, paramName string) (primitive.ObjectID, bool) {

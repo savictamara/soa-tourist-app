@@ -10,3 +10,11 @@ export interface User {
   biography?: string | null;
   motto?: string | null;
 }
+
+export interface PublicUser {
+  id: number;
+  username: string;
+  role: string;
+  profileImage?: string | null;
+  bio?: string | null;
+}

@@ -1,0 +1,202 @@
+:host {
+  display: block;
+}
+
+.panel {
+  background: #fffafc;
+  border: 1px solid #ffd7e5;
+  border-radius: 24px;
+  padding: 1.5rem;
+}
+
+h2, h3, h4 {
+  color: #a8486e;
+}
+
+.panel-text {
+  color: #8e6172;
+}
+
+.tour-items, .list {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.tour-item, .card {
+  border: 1px solid #f0bfd1;
+  border-radius: 14px;
+  background: #fff4f8;
+  color: #7c5062;
+  padding: 0.9rem;
+  text-align: left;
+}
+
+.tour-item {
+  padding: 24px;
+  margin-bottom: 20px;
+  border-radius: 20px;
+  background: #fff8fb;
+  border: 1px solid #f3bfd2;
+  box-shadow: 0 8px 20px rgba(214, 102, 148, 0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tour-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(214, 102, 148, 0.12);
+}
+
+.tour-title {
+  margin: 0 0 16px;
+  font-size: 28px;
+  font-weight: 700;
+  color: #8d3b64;
+}
+
+.tour-description-block {
+  margin-bottom: 18px;
+}
+
+.tour-description {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.section-label {
+  margin: 0 0 8px;
+  font-weight: 700;
+  color: #8d3b64;
+}
+
+.tour-metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.metadata-item {
+  background: #fff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #f6d7e4;
+}
+
+.tour-tags-section {
+  margin-bottom: 18px;
+}
+
+.tag-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #f7d6e4;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.no-value {
+  color: #8e6172;
+}
+
+.tour-stats {
+  display: flex;
+  gap: 24px;
+  font-weight: 600;
+  color: #8d3b64;
+  flex-wrap: wrap;
+}
+
+.details {
+  margin-top: 1rem;
+  border-top: 1px solid #f0bfd1;
+  padding-top: 1rem;
+}
+
+.tour-form {
+  display: grid;
+  gap: 0.8rem;
+}
+
+input, textarea, select {
+  width: 100%;
+  border: 1px solid #f0bfd1;
+  border-radius: 14px;
+  padding: 0.8rem 1rem;
+  background: #fff;
+  font: inherit;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.9rem 1.1rem;
+  background: #ef7fa8;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.secondary-button {
+  background: #ffc1d6;
+  color: #8d3f5f;
+}
+
+.drop-zone {
+  display: grid;
+  place-items: center;
+  min-height: 120px;
+  border: 2px dashed #f0bfd1;
+  border-radius: 14px;
+  background: #fff4f8;
+  position: relative;
+  cursor: pointer;
+}
+
+.drop-zone.active {
+  border-color: #ef7fa8;
+}
+
+.drop-zone input[type='file'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.image-item {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.preview {
+  width: 100%;
+  max-width: 220px;
+  border-radius: 12px;
+  border: 1px solid #f0bfd1;
+}
+
+.state {
+  padding: 0.8rem 1rem;
+  border-radius: 14px;
+  background: #fff4f8;
+}
+
+.success {
+  background: #f9ddeb;
+  color: #8d3f5f;
+}
+
+.error {
+  background: #ffe3e8;
+  color: #b34366;
+}
