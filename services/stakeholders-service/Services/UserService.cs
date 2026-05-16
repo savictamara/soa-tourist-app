@@ -13,6 +13,19 @@ public class UserService : IUserService
         _userRepository = userRepository;
     }
 
+    public async Task<List<PublicUserDto>> GetPublicUsersAsync(CancellationToken cancellationToken = default)
+    {
+        var users = await _userRepository.GetAllAsync(cancellationToken);
+        return users.Select(user => new PublicUserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Role = user.Role,
+            ProfileImage = user.ProfileImage,
+            Bio = user.Biography
+        }).ToList();
+    }
+
     public async Task<List<UserResponseDto>> GetAllAsync(string adminUsername, CancellationToken cancellationToken = default)
     {
         var adminUser = await _userRepository.GetByUsernameAsync(adminUsername, cancellationToken);

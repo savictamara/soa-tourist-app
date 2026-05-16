@@ -4,6 +4,7 @@ namespace StakeholdersService.Services;
 
 public interface IUserService
 {
+    Task<List<PublicUserDto>> GetPublicUsersAsync(CancellationToken cancellationToken = default);
     Task<List<UserResponseDto>> GetAllAsync(string adminUsername, CancellationToken cancellationToken = default);
     Task BlockAsync(long id, string adminUsername, CancellationToken cancellationToken = default);
     Task<UserProfileResponseDto> GetProfileAsync(long id, CancellationToken cancellationToken = default);

@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
 import { KeyPoint } from '../models/key-point.model';
-import { CreateKeyPointRequest, CreateTourRequest, Tour } from '../models/tour.model';
+import { CreateKeyPointRequest, CreateReviewRequest, CreateTourRequest, Review, Tour } from '../models/tour.model';
 import { AuthStateService } from '../services/auth-state.service';
 import { TourApiService } from '../services/tour-api.service';
 import { finalize } from 'rxjs';
@@ -42,6 +42,16 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
   private mapMarker: L.Marker | null = null;
   keyPointImageDragActive = false;
   keyPointImageFileName = '';
+  reviewForm = {
+    rating: 5,
+    comment: '',
+    visitedDate: '',
+    images: [] as string[]
+  };
+  reviews: Review[] = [];
+  isLoadingReviews = false;
+  isAddingReview = false;
+  reviewImageDragActive = false;
   private readonly defaultMarkerIcon = L.icon({
     iconRetinaUrl: 'assets/leaflet/marker-icon-2x.png',
     iconUrl: 'assets/leaflet/marker-icon.png',
@@ -59,6 +69,10 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    if (this.authStateService.currentUser?.role === 'Tourist') {
+      this.loadTours();
+      return;
+    }
     this.loadToursByAuthor(this.getAuthorId());
   }
 
@@ -192,10 +206,40 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectedTour = foundTour ? this.normalizeTour(foundTour) : null;
     this.resetSelectedMapPoint();
     this.loadKeyPoints();
+    this.loadReviews();
     this.ensureMapReady();
   }
 
+  loadTours(preferredTourId?: string): void {
+    this.isLoadingTours = true;
+    this.errorMessage = '';
+    this.tourApiService.getTours().subscribe({
+      next: (tours) => {
+        this.tours = (tours ?? []).map(tour => this.normalizeTour(tour));
+        if (this.tours.length > 0) {
+          const tourToSelect = preferredTourId && this.tours.some(tour => tour.id === preferredTourId)
+            ? preferredTourId
+            : this.tours[0].id;
+          this.selectTour(tourToSelect);
+        } else {
+          this.selectedTour = null;
+          this.selectedTourId = '';
+          this.selectedTourKeyPoints = [];
+        }
+        this.isLoadingTours = false;
+      },
+      error: (error) => {
+        this.errorMessage = error.error?.error ?? 'Could not load tours.';
+        this.isLoadingTours = false;
+      }
+    });
+  }
+
   addKeyPoint(): void {
+    if (!this.canCreateTours) {
+      this.errorMessage = 'Only Guide or Author can add key points.';
+      return;
+    }
     if (!this.selectedTourId) {
       this.errorMessage = 'Select a tour first.';
       this.successMessage = '';
@@ -288,7 +332,8 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
     return {
       ...tour,
       tags: Array.isArray(tour.tags) ? tour.tags : [],
-      keyPoints: Array.isArray(tour.keyPoints) ? tour.keyPoints : []
+      keyPoints: Array.isArray(tour.keyPoints) ? tour.keyPoints : [],
+      reviews: Array.isArray(tour.reviews) ? tour.reviews : []
     };
   }
 
@@ -412,6 +457,135 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
       this.keyPointForm.imageUrl = imageSource;
       this.keyPointImageFileName = file.name;
       this.errorMessage = '';
+    };
+    reader.onerror = () => {
+      this.errorMessage = 'Could not read the selected image.';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  private loadReviews(): void {
+    if (!this.selectedTourId) {
+      this.reviews = [];
+      return;
+    }
+    this.isLoadingReviews = true;
+    this.tourApiService.getReviews(this.selectedTourId).subscribe({
+      next: (reviews) => {
+        this.reviews = reviews ?? [];
+        this.isLoadingReviews = false;
+      },
+      error: (error) => {
+        this.errorMessage = error.error?.error ?? 'Could not load reviews.';
+        this.isLoadingReviews = false;
+      }
+    });
+  }
+
+  addReview(): void {
+    if (!this.selectedTourId) {
+      this.errorMessage = 'Select a tour first.';
+      return;
+    }
+    const currentUser = this.authStateService.currentUser;
+    const touristUsername = currentUser?.username?.trim() ?? '';
+    const touristId = currentUser?.id ? String(currentUser.id) : touristUsername;
+    if (!touristUsername || !touristId) {
+      this.errorMessage = 'Logged user is required to add review.';
+      return;
+    }
+    if (!this.reviewForm.comment.trim() || !this.reviewForm.visitedDate) {
+      this.errorMessage = 'Comment and visited date are required.';
+      return;
+    }
+    if (this.reviewForm.rating < 1 || this.reviewForm.rating > 5) {
+      this.errorMessage = 'Rating must be between 1 and 5.';
+      return;
+    }
+
+    this.isAddingReview = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    const payload: CreateReviewRequest = {
+      rating: this.reviewForm.rating,
+      comment: this.reviewForm.comment.trim(),
+      visitedDate: this.reviewForm.visitedDate,
+      touristId,
+      touristUsername,
+      images: [...this.reviewForm.images]
+    };
+
+    this.tourApiService.addReview(this.selectedTourId, payload).subscribe({
+      next: (review) => {
+        this.reviews = [review, ...this.reviews];
+        this.reviewForm = { rating: 5, comment: '', visitedDate: '', images: [] };
+        this.successMessage = 'Review added successfully.';
+        this.isAddingReview = false;
+      },
+      error: (error) => {
+        this.errorMessage = error.error?.error ?? 'Could not add review.';
+        this.isAddingReview = false;
+      }
+    });
+  }
+
+  onReviewImageDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.reviewImageDragActive = true;
+  }
+
+  onReviewImageDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    this.reviewImageDragActive = false;
+  }
+
+  onReviewImageDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.reviewImageDragActive = false;
+    const files = event.dataTransfer?.files;
+    if (!files) {
+      return;
+    }
+    for (let i = 0; i < files.length; i += 1) {
+      const file = files.item(i);
+      if (file) {
+        this.readReviewImageFile(file);
+      }
+    }
+  }
+
+  onReviewImagesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = input.files;
+    if (!files) {
+      return;
+    }
+    for (let i = 0; i < files.length; i += 1) {
+      const file = files.item(i);
+      if (file) {
+        this.readReviewImageFile(file);
+      }
+    }
+    input.value = '';
+  }
+
+  removeReviewImage(index: number): void {
+    this.reviewForm.images = this.reviewForm.images.filter((_, imageIndex) => imageIndex !== index);
+  }
+
+  private readReviewImageFile(file: File): void {
+    if (!file.type.startsWith('image/')) {
+      this.errorMessage = 'Only image files are allowed.';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const imageSource = typeof reader.result === 'string' ? reader.result : '';
+      if (!imageSource) {
+        this.errorMessage = 'Could not read the selected image.';
+        return;
+      }
+      this.reviewForm.images = [...this.reviewForm.images, imageSource];
     };
     reader.onerror = () => {
       this.errorMessage = 'Could not read the selected image.';

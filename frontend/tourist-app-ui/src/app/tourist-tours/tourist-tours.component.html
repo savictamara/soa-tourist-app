@@ -1,0 +1,110 @@
+<section class="panel">
+  <h2>Tourist Tours</h2>
+  <p class="panel-text">Browse tours and leave a review after visiting.</p>
+
+  <div class="tour-list">
+    <h3>Tour List</h3>
+    <p *ngIf="isLoadingTours" class="state">Loading tours...</p>
+    <p *ngIf="!isLoadingTours && tours.length === 0" class="state">No tours available.</p>
+    <div class="tour-items" *ngIf="tours.length > 0">
+      <button class="tour-item" type="button" *ngFor="let tour of tours" (click)="selectTour(tour.id)">
+        <h4 class="tour-title">{{ tour.name }}</h4>
+
+        <div class="tour-description-block">
+          <p class="section-label">Opis:</p>
+          <p class="tour-description">{{ tour.description }}</p>
+        </div>
+
+        <div class="tour-metadata-grid">
+          <div class="metadata-item">Tezina: {{ tour.difficulty }}</div>
+          <div class="metadata-item">Status: {{ tour.status }}</div>
+          <div class="metadata-item">Cena: {{ tour.price }}</div>
+        </div>
+
+        <div class="tour-tags-section">
+          <p class="section-label">Tagovi:</p>
+          <div *ngIf="(tour.tags || []).length > 0; else noTags">
+            <span class="tag-badge" *ngFor="let tag of tour.tags">{{ tag }}</span>
+          </div>
+          <ng-template #noTags>
+            <span class="no-value">-</span>
+          </ng-template>
+        </div>
+
+        <div class="tour-stats">
+          <span>Broj kljucnih tacaka: {{ (tour.keyPoints || []).length }}</span>
+          <span>Broj recenzija: {{ (tour.reviews || []).length }}</span>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="selectedTour" class="details">
+    <h3>Selected Tour Details</h3>
+    <p><strong>{{ selectedTour.name }}</strong></p>
+    <p>{{ selectedTour.description }}</p>
+    <p>Difficulty: {{ selectedTour.difficulty }} | Status: {{ selectedTour.status }} | Price: {{ selectedTour.price }}</p>
+
+    <h4>Key Points</h4>
+    <p *ngIf="isLoadingDetails" class="state">Loading details...</p>
+    <p *ngIf="!isLoadingDetails && keyPoints.length === 0" class="state">No key points.</p>
+    <div *ngIf="keyPoints.length > 0" class="list">
+      <article class="card" *ngFor="let keyPoint of keyPoints">
+        <p><strong>{{ keyPoint.name }}</strong></p>
+        <p>{{ keyPoint.description }}</p>
+        <p>Lat: {{ keyPoint.latitude }} | Lng: {{ keyPoint.longitude }}</p>
+        <img *ngIf="keyPoint.imageUrl" class="preview" [src]="keyPoint.imageUrl" alt="Key point image">
+      </article>
+    </div>
+
+    <h4>Existing Reviews</h4>
+    <p *ngIf="!isLoadingDetails && reviews.length === 0" class="state">No reviews yet.</p>
+    <div *ngIf="reviews.length > 0" class="list">
+      <article class="card" *ngFor="let review of reviews">
+        <p><strong>{{ review.touristUsername }}</strong> rated {{ review.rating }}/5</p>
+        <p>{{ review.comment }}</p>
+        <p>Visited: {{ review.visitedDate }} | Commented: {{ review.commentDate | date:'medium' }}</p>
+        <div class="images" *ngIf="review.images?.length">
+          <img *ngFor="let image of review.images" class="preview" [src]="image" alt="Review image">
+        </div>
+      </article>
+    </div>
+
+    <h4>Add Review</h4>
+    <div class="tour-form">
+      <label for="rating">Rating</label>
+      <select id="rating" name="rating" [(ngModel)]="reviewForm.rating">
+        <option *ngFor="let rating of [1,2,3,4,5]" [ngValue]="rating">{{ rating }}</option>
+      </select>
+
+      <label for="comment">Comment</label>
+      <textarea id="comment" name="comment" rows="3" [(ngModel)]="reviewForm.comment"></textarea>
+
+      <label for="visitedDate">Visited Date</label>
+      <input id="visitedDate" type="date" name="visitedDate" [(ngModel)]="reviewForm.visitedDate">
+
+      <label class="drop-zone"
+        [class.active]="reviewImageDragActive"
+        (dragover)="onReviewImageDragOver($event)"
+        (dragleave)="onReviewImageDragLeave($event)"
+        (drop)="onReviewImageDrop($event)">
+        <input type="file" accept="image/*" multiple (change)="onReviewImageSelected($event)">
+        <p>Drag and drop images or click to choose files.</p>
+      </label>
+
+      <div class="images" *ngIf="reviewForm.images.length > 0">
+        <div class="image-item" *ngFor="let image of reviewForm.images; let i = index">
+          <img class="preview" [src]="image" alt="Review preview">
+          <button type="button" class="secondary-button" (click)="removeReviewImage(i)">Remove</button>
+        </div>
+      </div>
+
+      <button type="button" (click)="submitReview()" [disabled]="isSubmittingReview">
+        {{ isSubmittingReview ? 'Submitting...' : 'Submit Review' }}
+      </button>
+    </div>
+  </div>
+
+  <p *ngIf="successMessage" class="state success">{{ successMessage }}</p>
+  <p *ngIf="errorMessage" class="state error">{{ errorMessage }}</p>
+</section>

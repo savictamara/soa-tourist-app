@@ -52,6 +52,19 @@ services:
     networks:
       - database
 
+  follower-neo4j:
+    image: neo4j:5
+    container_name: follower-neo4j
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=neo4j/password123
+    volumes:
+      - follower-neo4j-data:/data
+    networks:
+      - database
+
   stakeholders-service:
     build:
       context: .
@@ -106,6 +119,21 @@ services:
       - application
       - database
 
+  follower-service:
+    build: ./services/follower-service
+    container_name: follower-service
+    ports:
+      - "8086:8086"
+    environment:
+      - SPRING_NEO4J_URI=bolt://follower-neo4j:7687
+      - SPRING_NEO4J_AUTHENTICATION_USERNAME=neo4j
+      - SPRING_NEO4J_AUTHENTICATION_PASSWORD=password123
+    depends_on:
+      - follower-neo4j
+    networks:
+      - application
+      - database
+
   tourist-app-ui:
     build:
       context: ./frontend/tourist-app-ui
@@ -117,6 +145,7 @@ services:
       - stakeholders-service
       - blog-service
       - tour-service
+      - follower-service
     networks:
       - application
 
@@ -124,6 +153,7 @@ volumes:
   stakeholders-db-data:
   blog-db-data:
   tour-mongo-data:
+  follower-neo4j-data:
 
 networks:
   application:

@@ -180,6 +180,17 @@ button {
   border: 1px solid #f0bfd1;
 }
 
+.review-images-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.review-image-item {
+  display: grid;
+  gap: 0.35rem;
+}
+
 .key-point-list {
   display: grid;
   gap: 0.7rem;

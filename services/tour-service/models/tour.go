@@ -28,8 +28,20 @@ type Tour struct {
 	Status      string             `bson:"status" json:"status"`
 	Price       float64            `bson:"price" json:"price"`
 	KeyPoints   []KeyPoint         `bson:"keyPoints" json:"keyPoints"`
+	Reviews     []Review           `bson:"reviews" json:"reviews"`
 	CreatedAt   time.Time          `bson:"createdAt" json:"createdAt"`
 	UpdatedAt   time.Time          `bson:"updatedAt" json:"updatedAt"`
+}
+
+type Review struct {
+	ID              primitive.ObjectID `bson:"id" json:"id"`
+	Rating          int                `bson:"rating" json:"rating"`
+	Comment         string             `bson:"comment" json:"comment"`
+	TouristID       string             `bson:"touristId" json:"touristId"`
+	TouristUsername string             `bson:"touristUsername" json:"touristUsername"`
+	VisitedDate     string             `bson:"visitedDate" json:"visitedDate"`
+	CommentDate     time.Time          `bson:"commentDate" json:"commentDate"`
+	Images          []string           `bson:"images" json:"images"`
 }
 
 type CreateTourRequest struct {
@@ -46,4 +58,13 @@ type AddKeyPointRequest struct {
 	Latitude    float64 `json:"latitude"`
 	Longitude   float64 `json:"longitude"`
 	ImageURL    string  `json:"imageUrl"`
+}
+
+type CreateReviewRequest struct {
+	Rating          int      `json:"rating"`
+	Comment         string   `json:"comment"`
+	TouristID       string   `json:"touristId"`
+	TouristUsername string   `json:"touristUsername"`
+	VisitedDate     string   `json:"visitedDate"`
+	Images          []string `json:"images"`
 }

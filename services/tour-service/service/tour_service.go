@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -53,6 +54,7 @@ func (s *TourService) CreateTour(ctx context.Context, req models.CreateTourReque
 		Status:      "draft",
 		Price:       0,
 		KeyPoints:   []models.KeyPoint{},
+		Reviews:     []models.Review{},
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
@@ -125,4 +127,62 @@ func (s *TourService) GetKeyPoints(ctx context.Context, tourID primitive.ObjectI
 		return []models.KeyPoint{}, nil
 	}
 	return tour.KeyPoints, nil
+}
+
+func (s *TourService) GetAllTours(ctx context.Context) ([]models.Tour, error) {
+	tours, err := s.repo.GetAll(ctx)
+	if err != nil {
+		return []models.Tour{}, err
+	}
+	if tours == nil {
+		return []models.Tour{}, nil
+	}
+	return tours, nil
+}
+
+func (s *TourService) AddReview(ctx context.Context, tourID primitive.ObjectID, req models.CreateReviewRequest) (models.Review, error) {
+	if req.Rating < 1 || req.Rating > 5 {
+		return models.Review{}, fmt.Errorf("%w: rating must be between 1 and 5", ErrInvalidInput)
+	}
+	if strings.TrimSpace(req.Comment) == "" ||
+		strings.TrimSpace(req.TouristID) == "" ||
+		strings.TrimSpace(req.TouristUsername) == "" ||
+		strings.TrimSpace(req.VisitedDate) == "" {
+		return models.Review{}, ErrInvalidInput
+	}
+
+	now := time.Now().UTC()
+	review := models.Review{
+		ID:              primitive.NewObjectID(),
+		Rating:          req.Rating,
+		Comment:         strings.TrimSpace(req.Comment),
+		TouristID:       strings.TrimSpace(req.TouristID),
+		TouristUsername: strings.TrimSpace(req.TouristUsername),
+		VisitedDate:     strings.TrimSpace(req.VisitedDate),
+		CommentDate:     now,
+		Images:          make([]string, 0, len(req.Images)),
+	}
+	for _, image := range req.Images {
+		trimmed := strings.TrimSpace(image)
+		if trimmed != "" {
+			review.Images = append(review.Images, trimmed)
+		}
+	}
+
+	if err := s.repo.AddReview(ctx, tourID, review, now); err != nil {
+		return models.Review{}, err
+	}
+
+	return review, nil
+}
+
+func (s *TourService) GetReviews(ctx context.Context, tourID primitive.ObjectID) ([]models.Review, error) {
+	tour, err := s.repo.GetByID(ctx, tourID)
+	if err != nil {
+		return []models.Review{}, err
+	}
+	if tour.Reviews == nil {
+		return []models.Review{}, nil
+	}
+	return tour.Reviews, nil
 }

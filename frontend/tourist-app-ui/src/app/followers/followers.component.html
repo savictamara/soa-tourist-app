@@ -1,0 +1,62 @@
+<section class="panel">
+  <h2>Followers</h2>
+  <p class="panel-text">
+    Current user:
+    <strong>{{ currentUsername }}</strong> (ID: {{ currentUserId }}, Role: {{ currentRole }})
+  </p>
+
+  <p *ngIf="isLoading" class="state">Loading follower data...</p>
+
+  <h3>All Profiles</h3>
+  <p *ngIf="allProfiles.length === 0" class="state">No profiles available.</p>
+  <div class="list" *ngIf="allProfiles.length > 0">
+    <article class="card" *ngFor="let profile of allProfiles">
+      <div class="profile-row">
+        <img *ngIf="profile.profileImage" [src]="profile.profileImage" alt="Profile image">
+        <div>
+          <p><strong>{{ profile.username }}</strong> ({{ profile.role }})</p>
+          <p *ngIf="profile.bio" class="bio">{{ profile.bio }}</p>
+        </div>
+      </div>
+      <button *ngIf="!isFollowing(profile)" type="button" (click)="follow(profile)">Follow</button>
+      <button *ngIf="isFollowing(profile)" type="button" class="secondary-button" (click)="unfollow(profile)">Unfollow</button>
+    </article>
+  </div>
+
+  <div class="split">
+    <div>
+      <h3>Following</h3>
+      <p *ngIf="following.length === 0" class="state">You are not following anyone.</p>
+      <div class="list" *ngIf="following.length > 0">
+        <article class="card" *ngFor="let user of following">
+          <p><strong>{{ user.username }}</strong> ({{ user.role }})</p>
+          <button type="button" class="secondary-button" (click)="unfollow(user)">Unfollow</button>
+        </article>
+      </div>
+    </div>
+
+    <div>
+      <h3>Recommended Profiles</h3>
+      <p *ngIf="recommendations.length === 0" class="state">No recommendations yet.</p>
+      <div class="list" *ngIf="recommendations.length > 0">
+        <article class="card" *ngFor="let user of recommendations">
+          <p><strong>{{ user.username }}</strong> ({{ user.role }})</p>
+          <button type="button" (click)="followRecommended(user)">Follow</button>
+        </article>
+      </div>
+    </div>
+  </div>
+
+  <h3>Followed Blogs</h3>
+  <p *ngIf="followedBlogs.length === 0" class="state">No blogs from followed users.</p>
+  <div class="list" *ngIf="followedBlogs.length > 0">
+    <article class="card" *ngFor="let blog of followedBlogs">
+      <p><strong>{{ blog.title }}</strong></p>
+      <p>Author: {{ blog.authorUsername }}</p>
+      <p class="bio">{{ blog.descriptionMarkdown }}</p>
+    </article>
+  </div>
+
+  <p *ngIf="successMessage" class="state success">{{ successMessage }}</p>
+  <p *ngIf="errorMessage" class="state error">{{ errorMessage }}</p>
+</section>

@@ -12,6 +12,8 @@
         <a routerLink="/profile" routerLinkActive="active">Profile</a>
         <a *ngIf="currentUser && currentUser.role !== 'Administrator'" routerLink="/blogs" routerLinkActive="active">Blog</a>
         <a *ngIf="currentUser && (currentUser.role === 'Guide' || currentUser.role === 'Author')" routerLink="/tours" routerLinkActive="active">Tours</a>
+        <a *ngIf="currentUser?.role === 'Tourist'" routerLink="/tourist-tours" routerLinkActive="active">Tours</a>
+        <a *ngIf="currentUser" routerLink="/followers" routerLinkActive="active">Followers</a>
         <a *ngIf="currentUser?.role === 'Administrator'" routerLink="/users" routerLinkActive="active">Users</a>
         <button *ngIf="currentUser" type="button" class="logout-button" (click)="clearCurrentUser()">Logout</button>
       </nav>
