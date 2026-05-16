@@ -8,7 +8,7 @@ import { KeyPoint } from '../models/key-point.model';
   providedIn: 'root'
 })
 export class TourApiService {
-  private readonly baseUrl = 'http://localhost:8085/api/tours';
+  private readonly baseUrl = 'http://localhost:8080/api/tours';
 
   constructor(private readonly http: HttpClient) {}
 

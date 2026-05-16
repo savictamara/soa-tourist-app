@@ -11,7 +11,7 @@ import { UpdateBlogCommentRequest } from '../models/update-blog-comment-request.
   providedIn: 'root'
 })
 export class BlogApiService {
-  private readonly baseUrl = 'http://localhost:5002/api';
+  private readonly baseUrl = 'http://localhost:8080/api';
 
   constructor(private readonly http: HttpClient) {}
 
