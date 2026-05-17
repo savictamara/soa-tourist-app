@@ -16,6 +16,8 @@ func RegisterRoutes(router *gin.Engine, handler *handlers.TourHandler) {
 		api.GET("/:tourId", handler.GetTour)
 		api.POST("/:tourId/key-points", handler.AddKeyPoint)
 		api.GET("/:tourId/key-points", handler.GetKeyPoints)
+		api.PUT("/:tourId/key-points/:keyPointId", handler.UpdateKeyPoint)
+		api.DELETE("/:tourId/key-points/:keyPointId", handler.DeleteKeyPoint)
 		api.POST("/:tourId/reviews", handler.AddReview)
 		api.GET("/:tourId/reviews", handler.GetReviews)
 	}

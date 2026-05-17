@@ -132,6 +132,65 @@ func (r *TourRepository) AddKeyPoint(ctx context.Context, tourID primitive.Objec
 	return r.GetByID(ctx, tourID)
 }
 
+func (r *TourRepository) UpdateKeyPoint(ctx context.Context, tourID primitive.ObjectID, keyPointID primitive.ObjectID, req models.UpdateKeyPointRequest, now time.Time) (models.Tour, error) {
+	update := bson.M{
+		"$set": bson.M{
+			"keyPoints.$[kp].name":        req.Name,
+			"keyPoints.$[kp].description": req.Description,
+			"keyPoints.$[kp].latitude":    req.Latitude,
+			"keyPoints.$[kp].longitude":   req.Longitude,
+			"keyPoints.$[kp].imageUrl":    req.ImageURL,
+			"keyPoints.$[kp].updatedAt":   now,
+			"updatedAt":                   now,
+		},
+	}
+	arrayFilters := options.ArrayFilters{
+		Filters: []interface{}{bson.M{"kp._id": keyPointID}},
+	}
+	opts := options.Update().SetArrayFilters(arrayFilters)
+
+	res, err := r.collection.UpdateOne(ctx, bson.M{"_id": tourID}, update, opts)
+	if err != nil {
+		return models.Tour{}, err
+	}
+	if res.MatchedCount == 0 {
+		return models.Tour{}, mongo.ErrNoDocuments
+	}
+	return r.GetByID(ctx, tourID)
+}
+
+func (r *TourRepository) DeleteKeyPoint(ctx context.Context, tourID primitive.ObjectID, keyPointID primitive.ObjectID, now time.Time) (models.Tour, error) {
+	tour, err := r.GetByID(ctx, tourID)
+	if err != nil {
+		return models.Tour{}, err
+	}
+
+	remaining := make([]models.KeyPoint, 0, len(tour.KeyPoints))
+	for _, kp := range tour.KeyPoints {
+		if kp.ID != keyPointID {
+			remaining = append(remaining, kp)
+		}
+	}
+	for i := range remaining {
+		remaining[i].Order = i + 1
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"keyPoints": remaining,
+			"updatedAt": now,
+		},
+	}
+	res, err := r.collection.UpdateOne(ctx, bson.M{"_id": tourID}, update)
+	if err != nil {
+		return models.Tour{}, err
+	}
+	if res.MatchedCount == 0 {
+		return models.Tour{}, mongo.ErrNoDocuments
+	}
+	return r.GetByID(ctx, tourID)
+}
+
 func (r *TourRepository) AddReview(ctx context.Context, tourID primitive.ObjectID, review models.Review, updatedAt time.Time) error {
 	update := bson.M{
 		"$push": bson.M{

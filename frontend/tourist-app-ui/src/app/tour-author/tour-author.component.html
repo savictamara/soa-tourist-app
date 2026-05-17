@@ -2,10 +2,11 @@
   <div class="tour-header">
     <div>
       <h2>Tour Authoring</h2>
-      <p class="panel-text">Create tours and add key points with latitude and longitude.</p>
+      <p class="panel-text">Create tours and manage key points on the map.</p>
     </div>
   </div>
 
+  <!-- Create tour form -->
   <form class="tour-form" (ngSubmit)="createTour()" *ngIf="canCreateTours">
     <p class="panel-text">Author ID: <strong>{{ currentAuthorId }}</strong></p>
 
@@ -47,6 +48,7 @@
     </div>
   </form>
 
+  <!-- Tour list -->
   <div class="tour-list">
     <h3>My Tours</h3>
     <p *ngIf="!isLoadingTours && tours.length === 0" class="state">No tours found for this author.</p>
@@ -63,12 +65,18 @@
     </div>
   </div>
 
+  <!-- Key points section -->
   <div *ngIf="selectedTour" class="key-point-section">
-    <h3>Add Key Point for: {{ selectedTour.name }}</h3>
+    <h3>Key Points for: {{ selectedTour.name }}</h3>
 
-    <div class="tour-form" *ngIf="canCreateTours">
-      <label>Pick location on map</label>
-      <div id="tour-key-point-map" class="map-container"></div>
+    <!-- Map (always visible when tour selected) -->
+    <div id="tour-key-point-map" class="map-container"></div>
+    <p class="map-hint" *ngIf="mapMode === 'add' && canCreateTours">Click on the map to pick location for a new key point.</p>
+    <p class="map-hint editing" *ngIf="mapMode === 'edit'">Click on the map to change the position of the selected key point.</p>
+
+    <!-- Add key point form -->
+    <div class="tour-form" *ngIf="canCreateTours && !editingKeyPoint">
+      <h4>Add New Key Point</h4>
 
       <label for="kpName">Name</label>
       <input id="kpName" type="text" name="kpName" [(ngModel)]="keyPointForm.name">
@@ -93,7 +101,7 @@
           <input type="file" accept="image/*" (change)="onKeyPointImageSelected($event)">
           <p>Drag and drop an image here or click to choose a file.</p>
         </label>
-        <p *ngIf="keyPointImageFileName" class="state">Selected file: {{ keyPointImageFileName }}</p>
+        <p *ngIf="keyPointImageFileName" class="state">Selected: {{ keyPointImageFileName }}</p>
         <div *ngIf="keyPointForm.imageUrl" class="image-preview">
           <img [src]="keyPointForm.imageUrl" alt="Key point image preview">
           <button type="button" class="secondary-button" (click)="removeKeyPointImage()">Remove image</button>
@@ -103,23 +111,81 @@
       <button
         type="button"
         (click)="addKeyPoint()"
-        [disabled]="isAddingKeyPoint || !selectedTourId || keyPointForm.latitude === null || keyPointForm.longitude === null || !keyPointForm.name.trim() || !keyPointForm.description.trim() || !keyPointForm.imageUrl.trim()">
+        [disabled]="isAddingKeyPoint || keyPointForm.latitude === null || keyPointForm.longitude === null || !keyPointForm.name.trim() || !keyPointForm.description.trim() || !keyPointForm.imageUrl.trim()">
         {{ isAddingKeyPoint ? 'Adding...' : 'Add Key Point' }}
       </button>
     </div>
 
+    <!-- Edit key point form -->
+    <div class="tour-form edit-form" *ngIf="editingKeyPoint">
+      <h4>Edit Key Point: {{ editingKeyPoint.name }}</h4>
+
+      <label for="editKpName">Name</label>
+      <input id="editKpName" type="text" name="editKpName" [(ngModel)]="editKeyPointForm.name">
+
+      <label for="editKpDescription">Description</label>
+      <textarea id="editKpDescription" name="editKpDescription" rows="3" [(ngModel)]="editKeyPointForm.description"></textarea>
+
+      <label for="editKpLatitude">Latitude</label>
+      <input id="editKpLatitude" type="number" step="0.000001" name="editKpLatitude" [(ngModel)]="editKeyPointForm.latitude" readonly>
+
+      <label for="editKpLongitude">Longitude</label>
+      <input id="editKpLongitude" type="number" step="0.000001" name="editKpLongitude" [(ngModel)]="editKeyPointForm.longitude" readonly>
+
+      <div class="image-field">
+        <span>Key point image</span>
+        <label
+          class="drop-zone"
+          [class.active]="editKeyPointImageDragActive"
+          (dragover)="onEditKeyPointImageDragOver($event)"
+          (dragleave)="onEditKeyPointImageDragLeave($event)"
+          (drop)="onEditKeyPointImageDrop($event)">
+          <input type="file" accept="image/*" (change)="onEditKeyPointImageSelected($event)">
+          <p>Drag and drop a new image or click to choose a file.</p>
+        </label>
+        <p *ngIf="editKeyPointImageFileName" class="state">Selected: {{ editKeyPointImageFileName }}</p>
+        <div *ngIf="editKeyPointForm.imageUrl" class="image-preview">
+          <img [src]="editKeyPointForm.imageUrl" alt="Key point image preview">
+          <button type="button" class="secondary-button" (click)="removeEditKeyPointImage()">Remove image</button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button
+          type="button"
+          (click)="saveEditKeyPoint()"
+          [disabled]="isUpdatingKeyPoint || editKeyPointForm.latitude === null || editKeyPointForm.longitude === null || !editKeyPointForm.name.trim() || !editKeyPointForm.description.trim() || !editKeyPointForm.imageUrl.trim()">
+          {{ isUpdatingKeyPoint ? 'Saving...' : 'Save Changes' }}
+        </button>
+        <button type="button" class="secondary-button" (click)="cancelEdit()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Key point list -->
     <p *ngIf="isLoadingKeyPoints" class="state">Loading key points...</p>
     <div *ngIf="!isLoadingKeyPoints && selectedTourKeyPoints.length > 0" class="key-point-list">
-      <article *ngFor="let keyPoint of selectedTourKeyPoints" class="key-point-card">
-        <h4>#{{ keyPoint.order }} {{ keyPoint.name }}</h4>
+      <article
+        *ngFor="let keyPoint of selectedTourKeyPoints"
+        class="key-point-card"
+        [class.editing]="editingKeyPoint?.id === keyPoint.id">
+        <div class="key-point-card-header">
+          <h4>#{{ keyPoint.order }} {{ keyPoint.name }}</h4>
+          <div class="key-point-card-actions" *ngIf="canCreateTours">
+            <button type="button" class="secondary-button" (click)="startEditKeyPoint(keyPoint)" [disabled]="isDeletingKeyPointId === keyPoint.id">Edit</button>
+            <button type="button" class="danger-button" (click)="deleteKeyPoint(keyPoint.id)" [disabled]="isDeletingKeyPointId === keyPoint.id">
+              {{ isDeletingKeyPointId === keyPoint.id ? 'Deleting...' : 'Delete' }}
+            </button>
+          </div>
+        </div>
         <p>{{ keyPoint.description }}</p>
-        <p><strong>Latitude:</strong> {{ keyPoint.latitude }} | <strong>Longitude:</strong> {{ keyPoint.longitude }}</p>
+        <p><strong>Lat:</strong> {{ keyPoint.latitude }} | <strong>Lng:</strong> {{ keyPoint.longitude }}</p>
         <img *ngIf="keyPoint.imageUrl" class="key-point-image" [src]="keyPoint.imageUrl" alt="Key point image">
       </article>
     </div>
     <p *ngIf="!isLoadingKeyPoints && selectedTourKeyPoints.length === 0" class="state">No key points yet.</p>
   </div>
 
+  <!-- Reviews section -->
   <div *ngIf="selectedTour" class="key-point-section">
     <h3>Reviews for: {{ selectedTour.name }}</h3>
     <div class="tour-form">

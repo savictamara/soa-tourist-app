@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
 import { KeyPoint } from '../models/key-point.model';
-import { CreateKeyPointRequest, CreateReviewRequest, CreateTourRequest, Review, Tour } from '../models/tour.model';
+import { CreateKeyPointRequest, CreateReviewRequest, CreateTourRequest, Review, Tour, UpdateKeyPointRequest } from '../models/tour.model';
 import { AuthStateService } from '../services/auth-state.service';
 import { TourApiService } from '../services/tour-api.service';
 import { finalize } from 'rxjs';
@@ -27,6 +27,14 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
     imageUrl: ''
   };
 
+  editKeyPointForm = {
+    name: '',
+    description: '',
+    latitude: null as number | null,
+    longitude: null as number | null,
+    imageUrl: ''
+  };
+
   tours: Tour[] = [];
   selectedTourId = '';
   selectedTour: Tour | null = null;
@@ -34,14 +42,19 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
   tags: string[] = [];
   isCreatingTour = false;
   isAddingKeyPoint = false;
+  isUpdatingKeyPoint = false;
+  isDeletingKeyPointId: string | null = null;
   isLoadingTours = false;
   isLoadingKeyPoints = false;
+  editingKeyPoint: KeyPoint | null = null;
   successMessage = '';
   errorMessage = '';
-  private mapInstance: any;
-  private mapMarker: L.Marker | null = null;
+
   keyPointImageDragActive = false;
   keyPointImageFileName = '';
+  editKeyPointImageFileName = '';
+  editKeyPointImageDragActive = false;
+
   reviewForm = {
     rating: 5,
     comment: '',
@@ -52,6 +65,14 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
   isLoadingReviews = false;
   isAddingReview = false;
   reviewImageDragActive = false;
+
+  private mapInstance: any;
+  private mapMarker: L.Marker | null = null;
+  private editMarker: L.Marker | null = null;
+  private tourMarkers: L.Marker[] = [];
+  private tourPolyline: L.Polyline | null = null;
+  mapMode: 'add' | 'edit' = 'add';
+
   private readonly defaultMarkerIcon = L.icon({
     iconRetinaUrl: 'assets/leaflet/marker-icon-2x.png',
     iconUrl: 'assets/leaflet/marker-icon.png',
@@ -84,7 +105,6 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.mapInstance) {
       this.mapInstance.remove();
       this.mapInstance = null;
-      this.mapMarker = null;
     }
   }
 
@@ -106,8 +126,6 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   createTour(): void {
-    console.log('Create tour clicked');
-
     if (!this.canCreateTours) {
       this.errorMessage = 'Only Guide or Author can create tours.';
       this.successMessage = '';
@@ -139,24 +157,15 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
       difficulty: this.createTourForm.difficulty.trim(),
       tags: [...this.tags]
     };
-    console.log('Create tour payload', payload);
 
     this.tourApiService.createTour(payload).pipe(
-      finalize(() => {
-        this.isCreatingTour = false;
-      })
+      finalize(() => { this.isCreatingTour = false; })
     ).subscribe({
       next: (tour) => {
         const normalizedTour = this.normalizeTour(tour);
         this.tours = [normalizedTour, ...this.tours.filter(existing => existing.id !== normalizedTour.id)];
         this.selectTour(normalizedTour.id);
-        this.createTourForm = {
-          ...this.createTourForm,
-          name: '',
-          description: '',
-          difficulty: 'easy',
-          tagInput: ''
-        };
+        this.createTourForm = { ...this.createTourForm, name: '', description: '', difficulty: 'easy', tagInput: '' };
         this.tags = [];
         this.successMessage = 'Tour created successfully.';
         this.loadToursByAuthor(authorId, normalizedTour.id);
@@ -171,10 +180,8 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
   loadToursByAuthor(authorId: string, preferredTourId?: string): void {
     if (!authorId) {
       this.errorMessage = 'Author ID is required to fetch tours.';
-      this.successMessage = '';
       return;
     }
-
     this.isLoadingTours = true;
     this.errorMessage = '';
 
@@ -182,7 +189,32 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (tours) => {
         this.tours = (tours ?? []).map(tour => this.normalizeTour(tour));
         if (this.tours.length > 0) {
-          const tourToSelect = preferredTourId && this.tours.some(tour => tour.id === preferredTourId)
+          const tourToSelect = preferredTourId && this.tours.some(t => t.id === preferredTourId)
+            ? preferredTourId
+            : this.tours[0].id;
+          this.selectTour(tourToSelect);
+        } else {
+          this.selectedTour = null;
+          this.selectedTourId = '';
+          this.selectedTourKeyPoints = [];
+        }
+        this.isLoadingTours = false;
+      },
+      error: (error) => {
+        this.errorMessage = error.error?.error ?? 'Could not load tours.';
+        this.isLoadingTours = false;
+      }
+    });
+  }
+
+  loadTours(preferredTourId?: string): void {
+    this.isLoadingTours = true;
+    this.errorMessage = '';
+    this.tourApiService.getTours().subscribe({
+      next: (tours) => {
+        this.tours = (tours ?? []).map(tour => this.normalizeTour(tour));
+        if (this.tours.length > 0) {
+          const tourToSelect = preferredTourId && this.tours.some(t => t.id === preferredTourId)
             ? preferredTourId
             : this.tours[0].id;
           this.selectTour(tourToSelect);
@@ -204,35 +236,11 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectedTourId = tourId;
     const foundTour = this.tours.find(tour => tour.id === tourId) ?? null;
     this.selectedTour = foundTour ? this.normalizeTour(foundTour) : null;
+    this.cancelEdit();
     this.resetSelectedMapPoint();
     this.loadKeyPoints();
     this.loadReviews();
     this.ensureMapReady();
-  }
-
-  loadTours(preferredTourId?: string): void {
-    this.isLoadingTours = true;
-    this.errorMessage = '';
-    this.tourApiService.getTours().subscribe({
-      next: (tours) => {
-        this.tours = (tours ?? []).map(tour => this.normalizeTour(tour));
-        if (this.tours.length > 0) {
-          const tourToSelect = preferredTourId && this.tours.some(tour => tour.id === preferredTourId)
-            ? preferredTourId
-            : this.tours[0].id;
-          this.selectTour(tourToSelect);
-        } else {
-          this.selectedTour = null;
-          this.selectedTourId = '';
-          this.selectedTourKeyPoints = [];
-        }
-        this.isLoadingTours = false;
-      },
-      error: (error) => {
-        this.errorMessage = error.error?.error ?? 'Could not load tours.';
-        this.isLoadingTours = false;
-      }
-    });
   }
 
   addKeyPoint(): void {
@@ -242,26 +250,12 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     if (!this.selectedTourId) {
       this.errorMessage = 'Select a tour first.';
-      this.successMessage = '';
       return;
     }
-    if (!this.keyPointForm.name.trim() ||
-      !this.keyPointForm.description.trim() ||
-      this.keyPointForm.latitude === null ||
-      this.keyPointForm.longitude === null ||
+    if (!this.keyPointForm.name.trim() || !this.keyPointForm.description.trim() ||
+      this.keyPointForm.latitude === null || this.keyPointForm.longitude === null ||
       !this.keyPointForm.imageUrl.trim()) {
       this.errorMessage = 'Name, description, image, latitude and longitude are required.';
-      this.successMessage = '';
-      return;
-    }
-    if (this.keyPointForm.latitude < -90 || this.keyPointForm.latitude > 90) {
-      this.errorMessage = 'Latitude must be between -90 and 90.';
-      this.successMessage = '';
-      return;
-    }
-    if (this.keyPointForm.longitude < -180 || this.keyPointForm.longitude > 180) {
-      this.errorMessage = 'Longitude must be between -180 and 180.';
-      this.successMessage = '';
       return;
     }
 
@@ -278,15 +272,8 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     this.tourApiService.addKeyPoint(this.selectedTourId, request).subscribe({
-      next: (keyPoint) => {
-        this.selectedTourKeyPoints = [...this.selectedTourKeyPoints, this.normalizeKeyPoint(keyPoint)];
-        this.keyPointForm = {
-          name: '',
-          description: '',
-          latitude: null,
-          longitude: null,
-          imageUrl: ''
-        };
+      next: () => {
+        this.keyPointForm = { name: '', description: '', latitude: null, longitude: null, imageUrl: '' };
         this.keyPointImageFileName = '';
         this.resetSelectedMapPoint();
         this.successMessage = 'Key point added successfully.';
@@ -300,17 +287,107 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  startEditKeyPoint(kp: KeyPoint): void {
+    this.editingKeyPoint = kp;
+    this.mapMode = 'edit';
+    this.editKeyPointForm = {
+      name: kp.name,
+      description: kp.description,
+      latitude: kp.latitude,
+      longitude: kp.longitude,
+      imageUrl: kp.imageUrl ?? ''
+    };
+    this.editKeyPointImageFileName = '';
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    if (this.mapInstance) {
+      if (this.editMarker) {
+        this.mapInstance.removeLayer(this.editMarker);
+      }
+      this.editMarker = L.marker([kp.latitude, kp.longitude], { icon: this.defaultMarkerIcon }).addTo(this.mapInstance);
+      this.mapInstance.panTo([kp.latitude, kp.longitude]);
+    }
+  }
+
+  cancelEdit(): void {
+    this.editingKeyPoint = null;
+    this.mapMode = 'add';
+    if (this.editMarker && this.mapInstance) {
+      this.mapInstance.removeLayer(this.editMarker);
+      this.editMarker = null;
+    }
+  }
+
+  saveEditKeyPoint(): void {
+    if (!this.editingKeyPoint || !this.selectedTourId) return;
+    if (!this.editKeyPointForm.name.trim() || !this.editKeyPointForm.description.trim() ||
+      this.editKeyPointForm.latitude === null || this.editKeyPointForm.longitude === null ||
+      !this.editKeyPointForm.imageUrl.trim()) {
+      this.errorMessage = 'All fields are required.';
+      return;
+    }
+
+    this.isUpdatingKeyPoint = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    const request: UpdateKeyPointRequest = {
+      name: this.editKeyPointForm.name.trim(),
+      description: this.editKeyPointForm.description.trim(),
+      latitude: this.editKeyPointForm.latitude,
+      longitude: this.editKeyPointForm.longitude,
+      imageUrl: this.editKeyPointForm.imageUrl.trim()
+    };
+
+    this.tourApiService.updateKeyPoint(this.selectedTourId, this.editingKeyPoint.id, request).subscribe({
+      next: () => {
+        this.successMessage = 'Key point updated.';
+        this.cancelEdit();
+        this.loadKeyPoints();
+        this.isUpdatingKeyPoint = false;
+      },
+      error: (error) => {
+        this.errorMessage = error.error?.error ?? 'Could not update key point.';
+        this.isUpdatingKeyPoint = false;
+      }
+    });
+  }
+
+  deleteKeyPoint(keyPointId: string): void {
+    if (!this.selectedTourId) return;
+    if (!confirm('Are you sure you want to delete this key point?')) return;
+    this.isDeletingKeyPointId = keyPointId;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.tourApiService.deleteKeyPoint(this.selectedTourId, keyPointId).subscribe({
+      next: () => {
+        this.successMessage = 'Key point deleted.';
+        if (this.editingKeyPoint?.id === keyPointId) {
+          this.cancelEdit();
+        }
+        this.isDeletingKeyPointId = null;
+        this.loadKeyPoints();
+      },
+      error: (error) => {
+        this.errorMessage = error.error?.error ?? 'Could not delete key point.';
+        this.isDeletingKeyPointId = null;
+      }
+    });
+  }
+
   private loadKeyPoints(): void {
     if (!this.selectedTourId) {
       this.selectedTourKeyPoints = [];
       return;
     }
-
     this.isLoadingKeyPoints = true;
     this.tourApiService.getKeyPoints(this.selectedTourId).subscribe({
       next: (keyPoints) => {
-        this.selectedTourKeyPoints = (keyPoints ?? []).map(keyPoint => this.normalizeKeyPoint(keyPoint));
+        this.selectedTourKeyPoints = (keyPoints ?? []).map(kp => this.normalizeKeyPoint(kp));
         this.isLoadingKeyPoints = false;
+        this.renderTourOnMap();
       },
       error: (error) => {
         this.errorMessage = error.error?.error ?? 'Could not load key points.';
@@ -319,46 +396,49 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  addTagFromInput(event: Event): void {
-    event.preventDefault();
-    this.pushPendingTag();
-  }
+  private renderTourOnMap(): void {
+    if (!this.mapInstance) return;
+    this.clearTourLayers();
 
-  removeTag(tag: string): void {
-    this.tags = this.tags.filter(existingTag => existingTag !== tag);
-  }
+    const sorted = [...this.selectedTourKeyPoints].sort((a, b) => a.order - b.order);
+    if (sorted.length === 0) return;
 
-  private normalizeTour(tour: Tour): Tour {
-    return {
-      ...tour,
-      tags: Array.isArray(tour.tags) ? tour.tags : [],
-      keyPoints: Array.isArray(tour.keyPoints) ? tour.keyPoints : [],
-      reviews: Array.isArray(tour.reviews) ? tour.reviews : []
-    };
-  }
+    const latlngs: L.LatLngTuple[] = sorted.map(kp => [kp.latitude, kp.longitude]);
+    this.tourPolyline = L.polyline(latlngs, { color: '#ef7fa8', weight: 4, opacity: 0.8 }).addTo(this.mapInstance);
 
-  private normalizeKeyPoint(keyPoint: KeyPoint): KeyPoint {
-    return {
-      ...keyPoint
-    };
-  }
+    sorted.forEach(kp => {
+      const icon = L.divIcon({
+        className: '',
+        html: `<div class="kp-marker">${kp.order}</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+        popupAnchor: [0, -16]
+      });
+      const marker = L.marker([kp.latitude, kp.longitude], { icon })
+        .addTo(this.mapInstance)
+        .bindPopup(`<strong>${kp.name}</strong><br>${kp.description}`);
+      this.tourMarkers.push(marker);
+    });
 
-  private pushPendingTag(): void {
-    const value = this.createTourForm.tagInput.trim();
-    if (!value) {
-      return;
+    if (latlngs.length === 1) {
+      this.mapInstance.setView(latlngs[0], 13);
+    } else {
+      this.mapInstance.fitBounds(L.latLngBounds(latlngs), { padding: [40, 40] });
     }
-    if (!this.tags.includes(value)) {
-      this.tags = [...this.tags, value];
+  }
+
+  private clearTourLayers(): void {
+    this.tourMarkers.forEach(m => this.mapInstance?.removeLayer(m));
+    this.tourMarkers = [];
+    if (this.tourPolyline) {
+      this.mapInstance?.removeLayer(this.tourPolyline);
+      this.tourPolyline = null;
     }
-    this.createTourForm.tagInput = '';
   }
 
   private async initializeMap(): Promise<void> {
     const mapHost = document.getElementById('tour-key-point-map');
-    if (!mapHost) {
-      return;
-    }
+    if (!mapHost) return;
 
     if (this.mapInstance) {
       this.mapInstance.invalidateSize();
@@ -371,25 +451,33 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
     }).addTo(this.mapInstance);
 
     this.mapInstance.on('click', (e: any) => {
-      const latitude = Number(e.latlng.lat.toFixed(6));
-      const longitude = Number(e.latlng.lng.toFixed(6));
+      const lat = Number(e.latlng.lat.toFixed(6));
+      const lng = Number(e.latlng.lng.toFixed(6));
 
-      this.keyPointForm.latitude = latitude;
-      this.keyPointForm.longitude = longitude;
-
-      if (this.mapMarker) {
-        this.mapMarker.setLatLng([latitude, longitude]);
-        return;
+      if (this.mapMode === 'edit') {
+        this.editKeyPointForm.latitude = lat;
+        this.editKeyPointForm.longitude = lng;
+        if (this.editMarker) {
+          this.editMarker.setLatLng([lat, lng]);
+        } else {
+          this.editMarker = L.marker([lat, lng], { icon: this.defaultMarkerIcon }).addTo(this.mapInstance);
+        }
+      } else {
+        this.keyPointForm.latitude = lat;
+        this.keyPointForm.longitude = lng;
+        if (this.mapMarker) {
+          this.mapMarker.setLatLng([lat, lng]);
+        } else {
+          this.mapMarker = L.marker([lat, lng], { icon: this.defaultMarkerIcon }).addTo(this.mapInstance);
+        }
       }
-
-      this.mapMarker = L.marker([latitude, longitude], { icon: this.defaultMarkerIcon }).addTo(this.mapInstance);
     });
+
+    this.renderTourOnMap();
   }
 
   private ensureMapReady(): void {
-    if (!this.selectedTour) {
-      return;
-    }
+    if (!this.selectedTour) return;
     setTimeout(async () => {
       await this.initializeMap();
       if (this.mapInstance) {
@@ -407,6 +495,39 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  addTagFromInput(event: Event): void {
+    event.preventDefault();
+    this.pushPendingTag();
+  }
+
+  removeTag(tag: string): void {
+    this.tags = this.tags.filter(t => t !== tag);
+  }
+
+  private pushPendingTag(): void {
+    const value = this.createTourForm.tagInput.trim();
+    if (!value) return;
+    if (!this.tags.includes(value)) {
+      this.tags = [...this.tags, value];
+    }
+    this.createTourForm.tagInput = '';
+  }
+
+  private normalizeTour(tour: Tour): Tour {
+    return {
+      ...tour,
+      tags: Array.isArray(tour.tags) ? tour.tags : [],
+      keyPoints: Array.isArray(tour.keyPoints) ? tour.keyPoints : [],
+      reviews: Array.isArray(tour.reviews) ? tour.reviews : []
+    };
+  }
+
+  private normalizeKeyPoint(keyPoint: KeyPoint): KeyPoint {
+    return { ...keyPoint };
+  }
+
+  // ---- key point image (add form) ----
+
   onKeyPointImageDragOver(event: DragEvent): void {
     event.preventDefault();
     this.keyPointImageDragActive = true;
@@ -421,18 +542,14 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
     event.preventDefault();
     this.keyPointImageDragActive = false;
     const file = event.dataTransfer?.files?.item(0);
-    if (file) {
-      this.readKeyPointImageFile(file);
-    }
+    if (file) this.readImageFile(file, 'add');
   }
 
   onKeyPointImageSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.item(0);
-    if (!file) {
-      return;
-    }
-    this.readKeyPointImageFile(file);
+    if (!file) return;
+    this.readImageFile(file, 'add');
     input.value = '';
   }
 
@@ -441,40 +558,67 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.keyPointImageFileName = '';
   }
 
-  private readKeyPointImageFile(file: File): void {
+  // ---- key point image (edit form) ----
+
+  onEditKeyPointImageDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.editKeyPointImageDragActive = true;
+  }
+
+  onEditKeyPointImageDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    this.editKeyPointImageDragActive = false;
+  }
+
+  onEditKeyPointImageDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.editKeyPointImageDragActive = false;
+    const file = event.dataTransfer?.files?.item(0);
+    if (file) this.readImageFile(file, 'edit');
+  }
+
+  onEditKeyPointImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.item(0);
+    if (!file) return;
+    this.readImageFile(file, 'edit');
+    input.value = '';
+  }
+
+  removeEditKeyPointImage(): void {
+    this.editKeyPointForm.imageUrl = '';
+    this.editKeyPointImageFileName = '';
+  }
+
+  private readImageFile(file: File, target: 'add' | 'edit'): void {
     if (!file.type.startsWith('image/')) {
       this.errorMessage = 'Only image files are allowed.';
       return;
     }
-
     const reader = new FileReader();
     reader.onload = () => {
-      const imageSource = typeof reader.result === 'string' ? reader.result : '';
-      if (!imageSource) {
-        this.errorMessage = 'Could not read the selected image.';
-        return;
+      const src = typeof reader.result === 'string' ? reader.result : '';
+      if (!src) { this.errorMessage = 'Could not read the selected image.'; return; }
+      if (target === 'edit') {
+        this.editKeyPointForm.imageUrl = src;
+        this.editKeyPointImageFileName = file.name;
+      } else {
+        this.keyPointForm.imageUrl = src;
+        this.keyPointImageFileName = file.name;
       }
-      this.keyPointForm.imageUrl = imageSource;
-      this.keyPointImageFileName = file.name;
       this.errorMessage = '';
     };
-    reader.onerror = () => {
-      this.errorMessage = 'Could not read the selected image.';
-    };
+    reader.onerror = () => { this.errorMessage = 'Could not read the selected image.'; };
     reader.readAsDataURL(file);
   }
 
+  // ---- reviews ----
+
   private loadReviews(): void {
-    if (!this.selectedTourId) {
-      this.reviews = [];
-      return;
-    }
+    if (!this.selectedTourId) { this.reviews = []; return; }
     this.isLoadingReviews = true;
     this.tourApiService.getReviews(this.selectedTourId).subscribe({
-      next: (reviews) => {
-        this.reviews = reviews ?? [];
-        this.isLoadingReviews = false;
-      },
+      next: (reviews) => { this.reviews = reviews ?? []; this.isLoadingReviews = false; },
       error: (error) => {
         this.errorMessage = error.error?.error ?? 'Could not load reviews.';
         this.isLoadingReviews = false;
@@ -483,17 +627,11 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   addReview(): void {
-    if (!this.selectedTourId) {
-      this.errorMessage = 'Select a tour first.';
-      return;
-    }
+    if (!this.selectedTourId) { this.errorMessage = 'Select a tour first.'; return; }
     const currentUser = this.authStateService.currentUser;
     const touristUsername = currentUser?.username?.trim() ?? '';
     const touristId = currentUser?.id ? String(currentUser.id) : touristUsername;
-    if (!touristUsername || !touristId) {
-      this.errorMessage = 'Logged user is required to add review.';
-      return;
-    }
+    if (!touristUsername || !touristId) { this.errorMessage = 'Logged user is required to add review.'; return; }
     if (!this.reviewForm.comment.trim() || !this.reviewForm.visitedDate) {
       this.errorMessage = 'Comment and visited date are required.';
       return;
@@ -529,67 +667,44 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  onReviewImageDragOver(event: DragEvent): void {
-    event.preventDefault();
-    this.reviewImageDragActive = true;
-  }
-
-  onReviewImageDragLeave(event: DragEvent): void {
-    event.preventDefault();
-    this.reviewImageDragActive = false;
-  }
+  onReviewImageDragOver(event: DragEvent): void { event.preventDefault(); this.reviewImageDragActive = true; }
+  onReviewImageDragLeave(event: DragEvent): void { event.preventDefault(); this.reviewImageDragActive = false; }
 
   onReviewImageDrop(event: DragEvent): void {
     event.preventDefault();
     this.reviewImageDragActive = false;
     const files = event.dataTransfer?.files;
-    if (!files) {
-      return;
-    }
-    for (let i = 0; i < files.length; i += 1) {
+    if (!files) return;
+    for (let i = 0; i < files.length; i++) {
       const file = files.item(i);
-      if (file) {
-        this.readReviewImageFile(file);
-      }
+      if (file) this.readReviewImageFile(file);
     }
   }
 
   onReviewImagesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = input.files;
-    if (!files) {
-      return;
-    }
-    for (let i = 0; i < files.length; i += 1) {
+    if (!files) return;
+    for (let i = 0; i < files.length; i++) {
       const file = files.item(i);
-      if (file) {
-        this.readReviewImageFile(file);
-      }
+      if (file) this.readReviewImageFile(file);
     }
     input.value = '';
   }
 
   removeReviewImage(index: number): void {
-    this.reviewForm.images = this.reviewForm.images.filter((_, imageIndex) => imageIndex !== index);
+    this.reviewForm.images = this.reviewForm.images.filter((_, i) => i !== index);
   }
 
   private readReviewImageFile(file: File): void {
-    if (!file.type.startsWith('image/')) {
-      this.errorMessage = 'Only image files are allowed.';
-      return;
-    }
+    if (!file.type.startsWith('image/')) { this.errorMessage = 'Only image files are allowed.'; return; }
     const reader = new FileReader();
     reader.onload = () => {
-      const imageSource = typeof reader.result === 'string' ? reader.result : '';
-      if (!imageSource) {
-        this.errorMessage = 'Could not read the selected image.';
-        return;
-      }
-      this.reviewForm.images = [...this.reviewForm.images, imageSource];
+      const src = typeof reader.result === 'string' ? reader.result : '';
+      if (!src) { this.errorMessage = 'Could not read the selected image.'; return; }
+      this.reviewForm.images = [...this.reviewForm.images, src];
     };
-    reader.onerror = () => {
-      this.errorMessage = 'Could not read the selected image.';
-    };
+    reader.onerror = () => { this.errorMessage = 'Could not read the selected image.'; };
     reader.readAsDataURL(file);
   }
 }
