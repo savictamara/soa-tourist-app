@@ -147,4 +147,69 @@ public class UsersController : ControllerBase
             return NotFound(new { message = exception.Message });
         }
     }
+
+    [HttpGet("me/position")]
+    [Authorize(Roles = "Tourist")]
+    [ProducesResponseType(typeof(TouristPositionResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<TouristPositionResponseDto>> GetMyPosition(CancellationToken cancellationToken)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name);
+
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return Unauthorized(new { message = "Current user is not authenticated." });
+        }
+
+        try
+        {
+            var position = await _userService.GetTouristPositionAsync(username, cancellationToken);
+            return Ok(position);
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            return Unauthorized(new { message = exception.Message });
+        }
+        catch (KeyNotFoundException exception)
+        {
+            return NotFound(new { message = exception.Message });
+        }
+    }
+
+    [HttpPut("me/position")]
+    [Authorize(Roles = "Tourist")]
+    [ProducesResponseType(typeof(TouristPositionResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<TouristPositionResponseDto>> UpdateMyPosition(
+        [FromBody] UpdateTouristPositionRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name);
+
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return Unauthorized(new { message = "Current user is not authenticated." });
+        }
+
+        try
+        {
+            var position = await _userService.UpdateTouristPositionAsync(username, request, cancellationToken);
+            return Ok(position);
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new { message = exception.Message });
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            return Unauthorized(new { message = exception.Message });
+        }
+        catch (KeyNotFoundException exception)
+        {
+            return NotFound(new { message = exception.Message });
+        }
+    }
 }

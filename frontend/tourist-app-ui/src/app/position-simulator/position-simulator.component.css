@@ -1,0 +1,89 @@
+:host {
+  display: block;
+}
+
+.panel {
+  background: #fffafc;
+  border: 1px solid #ffd7e5;
+  border-radius: 24px;
+  padding: 1.5rem;
+}
+
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+h2 {
+  color: #a8486e;
+  margin-bottom: 0.35rem;
+}
+
+.panel-text {
+  margin-top: 0;
+  color: #8e6172;
+  max-width: 60ch;
+}
+
+.map-container {
+  width: 100%;
+  height: 420px;
+  min-height: 420px;
+  border: 1px solid #f0bfd1;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.map-hint {
+  margin: 0.4rem 0 1rem;
+  font-size: 0.95rem;
+  color: #8e6172;
+}
+
+.state {
+  margin-bottom: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: #fff4f8;
+  color: #8d3f5f;
+}
+
+.success {
+  background: #f9ddeb;
+}
+
+.error {
+  background: #ffe3e8;
+  color: #b34366;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.95rem 1.2rem;
+  background: #ef7fa8;
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.secondary-button {
+  background: #ffc1d6;
+  color: #8d3f5f;
+}
+
+@media (max-width: 768px) {
+  .map-container {
+    height: 320px;
+    min-height: 320px;
+  }
+}

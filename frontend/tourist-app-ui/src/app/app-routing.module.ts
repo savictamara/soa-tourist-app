@@ -12,6 +12,7 @@ import { BlogCreateComponent } from './blog-create/blog-create.component';
 import { TourAuthorComponent } from './tour-author/tour-author.component';
 import { TourAuthorGuard } from './guards/tour-author.guard';
 import { FollowersComponent } from './followers/followers.component';
+import { PositionSimulatorComponent } from './position-simulator/position-simulator.component';
 import { TouristToursComponent } from './tourist-tours/tourist-tours.component';
 import { TouristGuard } from './guards/tourist.guard';
 
@@ -23,6 +24,7 @@ const routes: Routes = [
   { path: 'blogs', component: BlogCreateComponent, canActivate: [BlogUserGuard] },
   { path: 'tours', component: TourAuthorComponent, canActivate: [TourAuthorGuard] },
   { path: 'tourist-tours', component: TouristToursComponent, canActivate: [TouristGuard] },
+  { path: 'position-simulator', component: PositionSimulatorComponent, canActivate: [TouristGuard] },
   { path: 'followers', component: FollowersComponent, canActivate: [AuthGuard] },
   { path: 'users', component: UsersComponent, canActivate: [AdminGuard] }
 ];

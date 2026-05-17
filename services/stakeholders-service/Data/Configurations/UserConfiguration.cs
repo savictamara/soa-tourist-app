@@ -46,6 +46,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(user => user.Biography)
             .HasMaxLength(4000);
 
+        builder.Property(user => user.Latitude);
+
+        builder.Property(user => user.Longitude);
+
         builder.HasIndex(user => user.Username)
             .IsUnique();
 

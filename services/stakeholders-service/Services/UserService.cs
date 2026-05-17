@@ -6,6 +6,7 @@ namespace StakeholdersService.Services;
 public class UserService : IUserService
 {
     private const string AdministratorRole = "Administrator";
+    private const string TouristRole = "Tourist";
     private readonly IUserRepository _userRepository;
 
     public UserService(IUserRepository userRepository)
@@ -138,5 +139,64 @@ public class UserService : IUserService
             Biography = user.Biography,
             Motto = user.Motto
         };
+    }
+
+    public async Task<TouristPositionResponseDto> GetTouristPositionAsync(string username, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByUsernameAsync(username, cancellationToken);
+
+        if (user is null)
+        {
+            throw new KeyNotFoundException($"User '{username}' was not found.");
+        }
+
+        if (user.Role != TouristRole)
+        {
+            throw new UnauthorizedAccessException("Only tourists can use the position simulator.");
+        }
+
+        return new TouristPositionResponseDto
+        {
+            Latitude = user.Latitude,
+            Longitude = user.Longitude
+        };
+    }
+
+    public async Task<TouristPositionResponseDto> UpdateTouristPositionAsync(string username, UpdateTouristPositionRequestDto request, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByUsernameAsync(username, cancellationToken);
+
+        if (user is null)
+        {
+            throw new KeyNotFoundException($"User '{username}' was not found.");
+        }
+
+        if (user.Role != TouristRole)
+        {
+            throw new UnauthorizedAccessException("Only tourists can use the position simulator.");
+        }
+
+        ValidateTouristPosition(request);
+
+        user.Latitude = request.Latitude;
+        user.Longitude = request.Longitude;
+
+        await _userRepository.SaveChangesAsync(cancellationToken);
+
+        return new TouristPositionResponseDto
+        {
+            Latitude = user.Latitude,
+            Longitude = user.Longitude
+        };
+    }
+
+    private static void ValidateTouristPosition(UpdateTouristPositionRequestDto request)
+    {
+        const string invalidPairMessage = "Latitude and longitude must both be provided or both be empty.";
+
+        if (request.Latitude.HasValue != request.Longitude.HasValue)
+        {
+            throw new ArgumentException(invalidPairMessage);
+        }
     }
 }

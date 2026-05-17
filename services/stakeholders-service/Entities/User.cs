@@ -13,4 +13,6 @@ public class User
     public string? ProfileImage { get; set; }
     public string? Biography { get; set; }
     public string? Motto { get; set; }
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
 }
