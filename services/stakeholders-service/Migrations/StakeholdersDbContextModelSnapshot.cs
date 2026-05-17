@@ -45,9 +45,15 @@ namespace StakeholdersService.Migrations
                     b.Property<bool>("IsBlocked")
                         .HasColumnType("boolean");
 
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision");
+
                     b.Property<string>("LastName")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision");
 
                     b.Property<string>("Motto")
                         .HasMaxLength(250)

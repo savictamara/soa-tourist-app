@@ -13,6 +13,7 @@ import { UsersComponent } from './users/users.component';
 import { BlogCreateComponent } from './blog-create/blog-create.component';
 import { TourAuthorComponent } from './tour-author/tour-author.component';
 import { FollowersComponent } from './followers/followers.component';
+import { PositionSimulatorComponent } from './position-simulator/position-simulator.component';
 import { TouristToursComponent } from './tourist-tours/tourist-tours.component';
 
 @NgModule({
@@ -25,6 +26,7 @@ import { TouristToursComponent } from './tourist-tours/tourist-tours.component';
     BlogCreateComponent,
     TourAuthorComponent,
     FollowersComponent,
+    PositionSimulatorComponent,
     TouristToursComponent
   ],
   imports: [

@@ -6,6 +6,7 @@ import { LoginRequest } from '../models/login-request.model';
 import { RegisterRequest } from '../models/register-request.model';
 import { PublicUser, User } from '../models/user.model';
 import { UserProfile } from '../models/user-profile.model';
+import { TouristPosition } from '../models/tourist-position.model';
 import { UpdateUserProfileRequest } from '../models/update-user-profile-request.model';
 
 @Injectable({
@@ -42,5 +43,13 @@ export class StakeholdersApiService {
 
   updateMyProfile(request: UpdateUserProfileRequest): Observable<UserProfile> {
     return this.http.put<UserProfile>(`${this.baseUrl}/users/me/profile`, request);
+  }
+
+  getMyPosition(): Observable<TouristPosition> {
+    return this.http.get<TouristPosition>(`${this.baseUrl}/users/me/position`);
+  }
+
+  updateMyPosition(request: TouristPosition | { latitude: number | null; longitude: number | null }): Observable<TouristPosition> {
+    return this.http.put<TouristPosition>(`${this.baseUrl}/users/me/position`, request);
   }
 }

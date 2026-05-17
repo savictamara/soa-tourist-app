@@ -10,4 +10,6 @@ public interface IUserService
     Task<UserProfileResponseDto> GetProfileAsync(long id, CancellationToken cancellationToken = default);
     Task<UserProfileResponseDto> GetProfileByUsernameAsync(string username, CancellationToken cancellationToken = default);
     Task<UserProfileResponseDto> UpdateProfileAsync(string username, UpdateUserProfileRequestDto request, CancellationToken cancellationToken = default);
+    Task<TouristPositionResponseDto> GetTouristPositionAsync(string username, CancellationToken cancellationToken = default);
+    Task<TouristPositionResponseDto> UpdateTouristPositionAsync(string username, UpdateTouristPositionRequestDto request, CancellationToken cancellationToken = default);
 }

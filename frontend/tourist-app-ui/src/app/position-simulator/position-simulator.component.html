@@ -1,0 +1,24 @@
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <h2>Position Simulator</h2>
+      <p class="panel-text">
+        Click on the map to set your current position.
+      </p>
+    </div>
+    <button type="button" class="secondary-button" (click)="clearPosition()" [disabled]="!currentPosition">
+      Clear position
+    </button>
+  </div>
+
+  <p class="state success" *ngIf="currentPosition">
+    Current position: {{ currentPosition.latitude }} , {{ currentPosition.longitude }}
+  </p>
+  <p class="state" *ngIf="!currentPosition">
+    No position selected yet.
+  </p>
+  <p class="state error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="map-hint" *ngIf="statusMessage">{{ statusMessage }}</p>
+
+  <div id="tourist-position-map" class="map-container"></div>
+</section>
