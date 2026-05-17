@@ -142,6 +142,61 @@ func (h *TourHandler) GetKeyPoints(c *gin.Context) {
 	c.JSON(http.StatusOK, keyPoints)
 }
 
+func (h *TourHandler) UpdateKeyPoint(c *gin.Context) {
+	tourID, ok := parseObjectID(c, "tourId")
+	if !ok {
+		return
+	}
+	keyPointID, ok := parseObjectID(c, "keyPointId")
+	if !ok {
+		return
+	}
+
+	var req models.UpdateKeyPointRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+		return
+	}
+
+	keyPoint, err := h.tourService.UpdateKeyPoint(c.Request.Context(), tourID, keyPointID, req)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidInput) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "name, description, imageUrl, latitude and longitude are required and must be valid"})
+			return
+		}
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "tour or key point not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update key point"})
+		return
+	}
+
+	c.JSON(http.StatusOK, keyPoint)
+}
+
+func (h *TourHandler) DeleteKeyPoint(c *gin.Context) {
+	tourID, ok := parseObjectID(c, "tourId")
+	if !ok {
+		return
+	}
+	keyPointID, ok := parseObjectID(c, "keyPointId")
+	if !ok {
+		return
+	}
+
+	if err := h.tourService.DeleteKeyPoint(c.Request.Context(), tourID, keyPointID); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "tour or key point not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete key point"})
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}
+
 func (h *TourHandler) AddReview(c *gin.Context) {
 	tourID, ok := parseObjectID(c, "tourId")
 	if !ok {

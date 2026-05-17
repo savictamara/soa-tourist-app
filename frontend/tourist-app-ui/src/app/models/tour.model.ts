@@ -42,6 +42,14 @@ export interface CreateKeyPointRequest {
   imageUrl?: string;
 }
 
+export interface UpdateKeyPointRequest {
+  name: string;
+  description: string;
+  latitude: number;
+  longitude: number;
+  imageUrl: string;
+}
+
 export interface CreateReviewRequest {
   rating: number;
   comment: string;

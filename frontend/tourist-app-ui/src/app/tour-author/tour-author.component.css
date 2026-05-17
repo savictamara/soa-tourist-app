@@ -208,6 +208,58 @@ button {
   margin: 0.2rem 0;
 }
 
+.map-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  color: #8e6172;
+}
+
+.map-hint.editing {
+  color: #a8486e;
+  font-weight: 600;
+}
+
+.edit-form {
+  border: 2px solid #ef7fa8;
+  border-radius: 14px;
+  padding: 1rem;
+  background: #fff4f8;
+}
+
+.key-point-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.key-point-card-header h4 {
+  margin: 0;
+  flex: 1;
+}
+
+.key-point-card-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.key-point-card-actions button {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.key-point-card.editing {
+  border-color: #ef7fa8;
+  background: #fff0f5;
+}
+
+.danger-button {
+  background: #f87171;
+  color: white;
+}
+
 .state {
   margin-bottom: 0;
   padding: 0.85rem 1rem;

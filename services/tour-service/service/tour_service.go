@@ -140,6 +140,34 @@ func (s *TourService) GetAllTours(ctx context.Context) ([]models.Tour, error) {
 	return tours, nil
 }
 
+func (s *TourService) UpdateKeyPoint(ctx context.Context, tourID primitive.ObjectID, keyPointID primitive.ObjectID, req models.UpdateKeyPointRequest) (models.KeyPoint, error) {
+	if strings.TrimSpace(req.Name) == "" || strings.TrimSpace(req.Description) == "" || strings.TrimSpace(req.ImageURL) == "" {
+		return models.KeyPoint{}, ErrInvalidInput
+	}
+	if req.Latitude < -90 || req.Latitude > 90 || req.Longitude < -180 || req.Longitude > 180 {
+		return models.KeyPoint{}, ErrInvalidInput
+	}
+
+	now := time.Now().UTC()
+	tour, err := s.repo.UpdateKeyPoint(ctx, tourID, keyPointID, req, now)
+	if err != nil {
+		return models.KeyPoint{}, err
+	}
+
+	for _, kp := range tour.KeyPoints {
+		if kp.ID == keyPointID {
+			return kp, nil
+		}
+	}
+	return models.KeyPoint{}, mongo.ErrNoDocuments
+}
+
+func (s *TourService) DeleteKeyPoint(ctx context.Context, tourID primitive.ObjectID, keyPointID primitive.ObjectID) error {
+	now := time.Now().UTC()
+	_, err := s.repo.DeleteKeyPoint(ctx, tourID, keyPointID, now)
+	return err
+}
+
 func (s *TourService) AddReview(ctx context.Context, tourID primitive.ObjectID, req models.CreateReviewRequest) (models.Review, error) {
 	if req.Rating < 1 || req.Rating > 5 {
 		return models.Review{}, fmt.Errorf("%w: rating must be between 1 and 5", ErrInvalidInput)

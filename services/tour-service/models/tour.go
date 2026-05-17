@@ -60,6 +60,14 @@ type AddKeyPointRequest struct {
 	ImageURL    string  `json:"imageUrl"`
 }
 
+type UpdateKeyPointRequest struct {
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Latitude    float64 `json:"latitude"`
+	Longitude   float64 `json:"longitude"`
+	ImageURL    string  `json:"imageUrl"`
+}
+
 type CreateReviewRequest struct {
 	Rating          int      `json:"rating"`
 	Comment         string   `json:"comment"`
