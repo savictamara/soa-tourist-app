@@ -6,9 +6,12 @@ public interface IBlogService
 {
     Task<List<BlogPostResponseDto>> GetAllAsync(string currentUsername, CancellationToken cancellationToken = default);
 
+    Task<List<BlogPostResponseDto>> GetFollowedBlogsAsync(long userId, string currentUsername, CancellationToken cancellationToken = default);
+
     Task<BlogPostResponseDto> CreateAsync(
         string username,
         string role,
+        long authorId,
         CreateBlogPostRequestDto request,
         CancellationToken cancellationToken = default);
 
@@ -16,6 +19,7 @@ public interface IBlogService
         long blogPostId,
         string username,
         string role,
+        long commenterId,
         CreateBlogCommentRequestDto request,
         CancellationToken cancellationToken = default);
 

@@ -1,94 +1,142 @@
 <section class="panel">
+
+  <!-- ── Page header ───────────────────────────────────── -->
   <div class="tour-header">
     <div>
       <h2>Tour Authoring</h2>
-      <p class="panel-text">Create tours and manage key points on the map.</p>
+      <p class="panel-text">Create tours, add key points on the map, and manage your catalogue.</p>
     </div>
   </div>
 
-  <!-- Create tour form -->
-  <form class="tour-form" (ngSubmit)="createTour()" *ngIf="canCreateTours">
-    <p class="panel-text">Author ID: <strong>{{ currentAuthorId }}</strong></p>
+  <!-- ── Create New Tour ───────────────────────────────── -->
+  <div class="section-card" *ngIf="canCreateTours">
+    <h3>Create New Tour</h3>
+    <p class="panel-text author-line">Author: <strong>{{ currentAuthorId }}</strong></p>
+    <form class="tour-form" (ngSubmit)="createTour()">
 
-    <label for="tourName">Tour name</label>
-    <input id="tourName" type="text" name="tourName" [(ngModel)]="createTourForm.name">
+      <label for="tourName">Tour name</label>
+      <input id="tourName" type="text" name="tourName" [(ngModel)]="createTourForm.name" placeholder="Enter tour name">
 
-    <label for="tourDescription">Description</label>
-    <textarea id="tourDescription" name="tourDescription" rows="4" [(ngModel)]="createTourForm.description"></textarea>
+      <label for="tourDescription">Description</label>
+      <textarea id="tourDescription" name="tourDescription" rows="4"
+        [(ngModel)]="createTourForm.description" placeholder="Describe the tour"></textarea>
 
-    <label for="difficulty">Difficulty</label>
-    <select id="difficulty" name="difficulty" [(ngModel)]="createTourForm.difficulty">
-      <option value="easy">easy</option>
-      <option value="medium">medium</option>
-      <option value="hard">hard</option>
-    </select>
+      <label for="difficulty">Difficulty</label>
+      <select id="difficulty" name="difficulty" [(ngModel)]="createTourForm.difficulty">
+        <option value="easy">easy</option>
+        <option value="medium">medium</option>
+        <option value="hard">hard</option>
+      </select>
 
-    <label for="tagsInput">Tags</label>
-    <input
-      id="tagsInput"
-      type="text"
-      name="tagsInput"
-      [(ngModel)]="createTourForm.tagInput"
-      (keydown.enter)="addTagFromInput($event)"
-      placeholder="Type tag and press Enter">
-    <div class="tags-list" *ngIf="tags.length > 0">
-      <span class="tag-chip" *ngFor="let tag of tags">
-        {{ tag }}
-        <button type="button" class="remove-tag" (click)="removeTag(tag)">x</button>
-      </span>
-    </div>
+      <label for="tagsInput">Tags <span class="label-hint">(type and press Enter)</span></label>
+      <input
+        id="tagsInput"
+        type="text"
+        name="tagsInput"
+        [(ngModel)]="createTourForm.tagInput"
+        (keydown.enter)="addTagFromInput($event)"
+        placeholder="e.g. nature, hiking, city">
+      <div class="tags-list" *ngIf="tags.length > 0">
+        <span class="tag-chip" *ngFor="let tag of tags">
+          {{ tag }}
+          <button type="button" class="remove-tag" (click)="removeTag(tag)">×</button>
+        </span>
+      </div>
 
-    <div class="actions">
       <button type="submit" [disabled]="isCreatingTour">
         {{ isCreatingTour ? 'Creating...' : 'Create Tour' }}
       </button>
-      <button type="button" class="secondary-button" (click)="loadToursByAuthor(currentAuthorId)" [disabled]="isLoadingTours">
-        {{ isLoadingTours ? 'Loading...' : 'Load My Tours' }}
-      </button>
-    </div>
-  </form>
+    </form>
+  </div>
 
-  <!-- Tour list -->
-  <div class="tour-list">
-    <h3>My Tours</h3>
-    <p *ngIf="!isLoadingTours && tours.length === 0" class="state">No tours found for this author.</p>
-    <div *ngIf="tours.length > 0" class="tour-items">
-      <button
+  <!-- ── My Tours ──────────────────────────────────────── -->
+  <div class="section-card">
+    <div class="section-header">
+      <h3>My Tours</h3>
+    </div>
+
+    <p *ngIf="isLoadingTours" class="state">Loading tours...</p>
+    <p *ngIf="!isLoadingTours && tours.length === 0" class="state">
+      No tours yet. Create your first tour above.
+    </p>
+
+    <div *ngIf="!isLoadingTours && tours.length > 0" class="tours-grid">
+      <article
         *ngFor="let tour of tours"
-        type="button"
-        class="tour-item"
-        [class.selected]="tour.id === selectedTourId"
-        (click)="selectTour(tour.id)">
-        <strong>{{ tour.name }}</strong>
-        <span>{{ tour.difficulty }} | {{ tour.status }} | {{ (tour.tags || []).join(', ') }} | price: {{ tour.price }}</span>
-      </button>
+        class="tour-card"
+        [class.tour-card-selected]="tour.id === selectedTourId">
+
+        <div class="tour-card-header">
+          <h4 class="tour-card-name">{{ tour.name }}</h4>
+          <span class="status-badge"
+            [class.status-draft]="tour.status === 'draft'"
+            [class.status-published]="tour.status === 'published'">
+            {{ tour.status }}
+          </span>
+        </div>
+
+        <p class="tour-card-description">{{ tour.description }}</p>
+
+        <div class="tour-meta-row">
+          <span class="meta-badge diff-badge">{{ tour.difficulty }}</span>
+          <span class="meta-badge price-badge">price: {{ tour.price }}</span>
+          <span class="meta-badge kp-badge">
+            {{ (tour.keyPoints || []).length }}
+            key point{{ (tour.keyPoints || []).length === 1 ? '' : 's' }}
+          </span>
+        </div>
+
+        <div class="tags-row" *ngIf="(tour.tags || []).length > 0">
+          <span class="tag-chip small-tag" *ngFor="let tag of tour.tags">{{ tag }}</span>
+        </div>
+
+        <button
+          type="button"
+          class="manage-kp-btn"
+          [class.managing]="tour.id === selectedTourId"
+          (click)="selectTour(tour.id)">
+          {{ tour.id === selectedTourId ? '✓ Managing Key Points' : 'Manage Key Points' }}
+        </button>
+      </article>
     </div>
   </div>
 
-  <!-- Key points section -->
-  <div *ngIf="selectedTour" class="key-point-section">
-    <h3>Key Points for: {{ selectedTour.name }}</h3>
+  <!-- ── Selected Tour: Key Points ─────────────────────── -->
+  <div *ngIf="selectedTour && canCreateTours" class="section-card selected-section">
+    <h3>Key Points — <em>{{ selectedTour.name }}</em></h3>
 
-    <!-- Map (always visible when tour selected) -->
+    <!-- Map -->
     <div id="tour-key-point-map" class="map-container"></div>
-    <p class="map-hint" *ngIf="mapMode === 'add' && canCreateTours">Click on the map to pick location for a new key point.</p>
-    <p class="map-hint editing" *ngIf="mapMode === 'edit'">Click on the map to change the position of the selected key point.</p>
+    <p class="map-hint" *ngIf="mapMode === 'add'">
+      Click on the map to pick a location for the new key point.
+    </p>
+    <p class="map-hint editing" *ngIf="mapMode === 'edit'">
+      Click on the map to move the key point being edited.
+    </p>
 
     <!-- Add key point form -->
-    <div class="tour-form" *ngIf="canCreateTours && !editingKeyPoint">
-      <h4>Add New Key Point</h4>
+    <div class="tour-form kp-form" *ngIf="!editingKeyPoint">
+      <h4>Add Key Point</h4>
 
       <label for="kpName">Name</label>
-      <input id="kpName" type="text" name="kpName" [(ngModel)]="keyPointForm.name">
+      <input id="kpName" type="text" name="kpName" [(ngModel)]="keyPointForm.name" placeholder="Key point name">
 
       <label for="kpDescription">Description</label>
-      <textarea id="kpDescription" name="kpDescription" rows="3" [(ngModel)]="keyPointForm.description"></textarea>
+      <textarea id="kpDescription" name="kpDescription" rows="3"
+        [(ngModel)]="keyPointForm.description" placeholder="Key point description"></textarea>
 
-      <label for="kpLatitude">Latitude</label>
-      <input id="kpLatitude" type="number" step="0.000001" name="kpLatitude" [(ngModel)]="keyPointForm.latitude" readonly>
-
-      <label for="kpLongitude">Longitude</label>
-      <input id="kpLongitude" type="number" step="0.000001" name="kpLongitude" [(ngModel)]="keyPointForm.longitude" readonly>
+      <div class="coord-row">
+        <div>
+          <label for="kpLatitude">Latitude</label>
+          <input id="kpLatitude" type="number" step="0.000001" name="kpLatitude"
+            [(ngModel)]="keyPointForm.latitude" readonly placeholder="Click map">
+        </div>
+        <div>
+          <label for="kpLongitude">Longitude</label>
+          <input id="kpLongitude" type="number" step="0.000001" name="kpLongitude"
+            [(ngModel)]="keyPointForm.longitude" readonly placeholder="Click map">
+        </div>
+      </div>
 
       <div class="image-field">
         <span>Key point image</span>
@@ -111,26 +159,39 @@
       <button
         type="button"
         (click)="addKeyPoint()"
-        [disabled]="isAddingKeyPoint || keyPointForm.latitude === null || keyPointForm.longitude === null || !keyPointForm.name.trim() || !keyPointForm.description.trim() || !keyPointForm.imageUrl.trim()">
+        [disabled]="isAddingKeyPoint
+          || keyPointForm.latitude === null
+          || keyPointForm.longitude === null
+          || !keyPointForm.name.trim()
+          || !keyPointForm.description.trim()
+          || !keyPointForm.imageUrl.trim()">
         {{ isAddingKeyPoint ? 'Adding...' : 'Add Key Point' }}
       </button>
     </div>
 
     <!-- Edit key point form -->
     <div class="tour-form edit-form" *ngIf="editingKeyPoint">
-      <h4>Edit Key Point: {{ editingKeyPoint.name }}</h4>
+      <h4>Edit Key Point — {{ editingKeyPoint.name }}</h4>
 
       <label for="editKpName">Name</label>
       <input id="editKpName" type="text" name="editKpName" [(ngModel)]="editKeyPointForm.name">
 
       <label for="editKpDescription">Description</label>
-      <textarea id="editKpDescription" name="editKpDescription" rows="3" [(ngModel)]="editKeyPointForm.description"></textarea>
+      <textarea id="editKpDescription" name="editKpDescription" rows="3"
+        [(ngModel)]="editKeyPointForm.description"></textarea>
 
-      <label for="editKpLatitude">Latitude</label>
-      <input id="editKpLatitude" type="number" step="0.000001" name="editKpLatitude" [(ngModel)]="editKeyPointForm.latitude" readonly>
-
-      <label for="editKpLongitude">Longitude</label>
-      <input id="editKpLongitude" type="number" step="0.000001" name="editKpLongitude" [(ngModel)]="editKeyPointForm.longitude" readonly>
+      <div class="coord-row">
+        <div>
+          <label for="editKpLatitude">Latitude</label>
+          <input id="editKpLatitude" type="number" step="0.000001" name="editKpLatitude"
+            [(ngModel)]="editKeyPointForm.latitude" readonly>
+        </div>
+        <div>
+          <label for="editKpLongitude">Longitude</label>
+          <input id="editKpLongitude" type="number" step="0.000001" name="editKpLongitude"
+            [(ngModel)]="editKeyPointForm.longitude" readonly>
+        </div>
+      </div>
 
       <div class="image-field">
         <span>Key point image</span>
@@ -154,7 +215,12 @@
         <button
           type="button"
           (click)="saveEditKeyPoint()"
-          [disabled]="isUpdatingKeyPoint || editKeyPointForm.latitude === null || editKeyPointForm.longitude === null || !editKeyPointForm.name.trim() || !editKeyPointForm.description.trim() || !editKeyPointForm.imageUrl.trim()">
+          [disabled]="isUpdatingKeyPoint
+            || editKeyPointForm.latitude === null
+            || editKeyPointForm.longitude === null
+            || !editKeyPointForm.name.trim()
+            || !editKeyPointForm.description.trim()
+            || !editKeyPointForm.imageUrl.trim()">
           {{ isUpdatingKeyPoint ? 'Saving...' : 'Save Changes' }}
         </button>
         <button type="button" class="secondary-button" (click)="cancelEdit()">Cancel</button>
@@ -163,6 +229,7 @@
 
     <!-- Key point list -->
     <p *ngIf="isLoadingKeyPoints" class="state">Loading key points...</p>
+
     <div *ngIf="!isLoadingKeyPoints && selectedTourKeyPoints.length > 0" class="key-point-list">
       <article
         *ngFor="let keyPoint of selectedTourKeyPoints"
@@ -170,74 +237,34 @@
         [class.editing]="editingKeyPoint?.id === keyPoint.id">
         <div class="key-point-card-header">
           <h4>#{{ keyPoint.order }} {{ keyPoint.name }}</h4>
-          <div class="key-point-card-actions" *ngIf="canCreateTours">
-            <button type="button" class="secondary-button" (click)="startEditKeyPoint(keyPoint)" [disabled]="isDeletingKeyPointId === keyPoint.id">Edit</button>
-            <button type="button" class="danger-button" (click)="deleteKeyPoint(keyPoint.id)" [disabled]="isDeletingKeyPointId === keyPoint.id">
+          <div class="key-point-card-actions">
+            <button type="button" class="secondary-button"
+              (click)="startEditKeyPoint(keyPoint)"
+              [disabled]="isDeletingKeyPointId === keyPoint.id">
+              Edit
+            </button>
+            <button type="button" class="danger-button"
+              (click)="deleteKeyPoint(keyPoint.id)"
+              [disabled]="isDeletingKeyPointId === keyPoint.id">
               {{ isDeletingKeyPointId === keyPoint.id ? 'Deleting...' : 'Delete' }}
             </button>
           </div>
         </div>
         <p>{{ keyPoint.description }}</p>
-        <p><strong>Lat:</strong> {{ keyPoint.latitude }} | <strong>Lng:</strong> {{ keyPoint.longitude }}</p>
+        <p class="coord-text">
+          <strong>Lat:</strong> {{ keyPoint.latitude }}&ensp;|&ensp;<strong>Lng:</strong> {{ keyPoint.longitude }}
+        </p>
         <img *ngIf="keyPoint.imageUrl" class="key-point-image" [src]="keyPoint.imageUrl" alt="Key point image">
       </article>
     </div>
-    <p *ngIf="!isLoadingKeyPoints && selectedTourKeyPoints.length === 0" class="state">No key points yet.</p>
+
+    <p *ngIf="!isLoadingKeyPoints && selectedTourKeyPoints.length === 0" class="state">
+      No key points yet. Click the map to add one.
+    </p>
   </div>
 
-  <!-- Reviews section -->
-  <div *ngIf="selectedTour" class="key-point-section">
-    <h3>Reviews for: {{ selectedTour.name }}</h3>
-    <div class="tour-form">
-      <label for="reviewRating">Rating</label>
-      <select id="reviewRating" name="reviewRating" [(ngModel)]="reviewForm.rating">
-        <option *ngFor="let rating of [1,2,3,4,5]" [ngValue]="rating">{{ rating }}</option>
-      </select>
-
-      <label for="reviewComment">Comment</label>
-      <textarea id="reviewComment" name="reviewComment" rows="3" [(ngModel)]="reviewForm.comment"></textarea>
-
-      <label for="reviewVisitedDate">Visited date</label>
-      <input id="reviewVisitedDate" type="date" name="reviewVisitedDate" [(ngModel)]="reviewForm.visitedDate">
-
-      <div class="image-field">
-        <span>Review images</span>
-        <label
-          class="drop-zone"
-          [class.active]="reviewImageDragActive"
-          (dragover)="onReviewImageDragOver($event)"
-          (dragleave)="onReviewImageDragLeave($event)"
-          (drop)="onReviewImageDrop($event)">
-          <input type="file" accept="image/*" multiple (change)="onReviewImagesSelected($event)">
-          <p>Drag and drop one or more images or click to choose files.</p>
-        </label>
-        <div *ngIf="reviewForm.images.length > 0" class="review-images-grid">
-          <div *ngFor="let image of reviewForm.images; let i = index" class="review-image-item">
-            <img [src]="image" alt="Review image preview">
-            <button type="button" class="secondary-button" (click)="removeReviewImage(i)">Remove</button>
-          </div>
-        </div>
-      </div>
-
-      <button type="button" (click)="addReview()" [disabled]="isAddingReview">
-        {{ isAddingReview ? 'Submitting...' : 'Submit Review' }}
-      </button>
-    </div>
-
-    <p *ngIf="isLoadingReviews" class="state">Loading reviews...</p>
-    <div *ngIf="!isLoadingReviews && reviews.length > 0" class="key-point-list">
-      <article *ngFor="let review of reviews" class="key-point-card">
-        <h4>{{ review.touristUsername }} rated {{ review.rating }}/5</h4>
-        <p>{{ review.comment }}</p>
-        <p><strong>Visited:</strong> {{ review.visitedDate }} | <strong>Commented:</strong> {{ review.commentDate | date:'medium' }}</p>
-        <div *ngIf="review.images?.length" class="review-images-grid">
-          <img *ngFor="let image of review.images" class="key-point-image" [src]="image" alt="Review image">
-        </div>
-      </article>
-    </div>
-    <p *ngIf="!isLoadingReviews && reviews.length === 0" class="state">No reviews yet.</p>
-  </div>
-
+  <!-- ── Feedback messages ──────────────────────────────── -->
   <p *ngIf="successMessage" class="state success">{{ successMessage }}</p>
   <p *ngIf="errorMessage" class="state error">{{ errorMessage }}</p>
+
 </section>

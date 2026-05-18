@@ -50,6 +50,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<IHealthRepository, HealthRepository>();
 builder.Services.AddScoped<IHealthService, HealthService>();
 builder.Services.AddScoped<IBlogRepository, BlogRepository>();
+builder.Services.AddHttpClient<IFollowerAuthorizationService, BlogService.Services.FollowerAuthorizationService>();
 builder.Services.AddScoped<IBlogService, BlogService.Services.BlogService>();
 
 var app = builder.Build();

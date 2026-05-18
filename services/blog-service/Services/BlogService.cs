@@ -8,10 +8,12 @@ public class BlogService : IBlogService
 {
     private static readonly HashSet<string> AllowedRoles = ["Guide", "Tourist"];
     private readonly IBlogRepository _blogRepository;
+    private readonly IFollowerAuthorizationService _followerAuth;
 
-    public BlogService(IBlogRepository blogRepository)
+    public BlogService(IBlogRepository blogRepository, IFollowerAuthorizationService followerAuth)
     {
         _blogRepository = blogRepository;
+        _followerAuth = followerAuth;
     }
 
     public async Task<List<BlogPostResponseDto>> GetAllAsync(string currentUsername, CancellationToken cancellationToken = default)
@@ -20,9 +22,37 @@ public class BlogService : IBlogService
         return posts.Select(post => MapToResponse(post, currentUsername)).ToList();
     }
 
+    public async Task<List<BlogPostResponseDto>> GetFollowedBlogsAsync(long userId, string currentUsername, CancellationToken cancellationToken = default)
+    {
+        var followedIds = await _followerAuth.GetFollowedAuthorIds(userId);
+        var followedUsernames = await _followerAuth.GetFollowedAuthorUsernames(userId);
+
+        var followedIdSet = new HashSet<long>(followedIds);
+        var followedUsernameSet = new HashSet<string>(followedUsernames, StringComparer.OrdinalIgnoreCase);
+
+        var posts = await _blogRepository.GetAllAsync(cancellationToken);
+
+        return posts
+            .Where(post =>
+            {
+                // Own blog: matched by numeric AuthorId (new blogs) or by username (legacy AuthorId=0)
+                var isOwn = (post.AuthorId != 0 && post.AuthorId == userId)
+                         || (post.AuthorId == 0 && post.AuthorUsername.Equals(currentUsername, StringComparison.OrdinalIgnoreCase));
+
+                // Followed author: matched by numeric AuthorId (new blogs) or by username (legacy AuthorId=0)
+                var isFollowed = (post.AuthorId != 0 && followedIdSet.Contains(post.AuthorId))
+                              || (post.AuthorId == 0 && followedUsernameSet.Contains(post.AuthorUsername));
+
+                return isOwn || isFollowed;
+            })
+            .Select(post => MapToResponse(post, currentUsername))
+            .ToList();
+    }
+
     public async Task<BlogPostResponseDto> CreateAsync(
         string username,
         string role,
+        long authorId,
         CreateBlogPostRequestDto request,
         CancellationToken cancellationToken = default)
     {
@@ -56,6 +86,7 @@ public class BlogService : IBlogService
             DescriptionMarkdown = descriptionMarkdown,
             CreatedAtUtc = DateTime.UtcNow,
             AuthorUsername = username,
+            AuthorId = authorId,
             Images = imageUrls
                 .Select(url => new BlogPostImage { ImageUrl = url })
                 .ToList()
@@ -70,6 +101,7 @@ public class BlogService : IBlogService
         long blogPostId,
         string username,
         string role,
+        long commenterId,
         CreateBlogCommentRequestDto request,
         CancellationToken cancellationToken = default)
     {
@@ -80,6 +112,17 @@ public class BlogService : IBlogService
         if (blogPost is null)
         {
             throw new KeyNotFoundException("Blog post not found.");
+        }
+
+        // Enforce follower-based authorization when the blog has a known author ID
+        // and the commenter is not the author themselves
+        if (blogPost.AuthorId != 0 && commenterId != blogPost.AuthorId)
+        {
+            var isFollowing = await _followerAuth.IsFollowing(commenterId, blogPost.AuthorId);
+            if (!isFollowing)
+            {
+                throw new UnauthorizedAccessException("You can comment only on blogs of users you follow.");
+            }
         }
 
         var text = request.Text.Trim();

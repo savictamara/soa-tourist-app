@@ -75,6 +75,13 @@ public class FollowerService {
         return userRepository.findFollowedAuthorIds(userId);
     }
 
+    public boolean isFollowing(String followerId, String targetId) {
+        if (isBlank(followerId) || isBlank(targetId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "followerId and targetId are required");
+        }
+        return userRepository.isFollowing(followerId.trim(), targetId.trim());
+    }
+
     private void validateFollowRequest(FollowRequest request) {
         if (isBlank(request.followerId()) || isBlank(request.followingId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "followerId and followingId are required");

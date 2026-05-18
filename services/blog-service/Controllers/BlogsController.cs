@@ -35,6 +35,23 @@ public class BlogsController : ControllerBase
         return Ok(posts);
     }
 
+    [HttpGet("followed/{userId:long}")]
+    [Authorize(Roles = "Guide,Tourist")]
+    [ProducesResponseType(typeof(List<BlogPostResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<BlogPostResponseDto>>> GetFollowed(long userId, CancellationToken cancellationToken)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name);
+
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return Unauthorized(new { message = "Current user is not authenticated." });
+        }
+
+        var posts = await _blogService.GetFollowedBlogsAsync(userId, username, cancellationToken);
+        return Ok(posts);
+    }
+
     [HttpPost]
     [Authorize(Roles = "Guide,Tourist")]
     [ProducesResponseType(typeof(BlogPostResponseDto), StatusCodes.Status201Created)]
@@ -46,15 +63,21 @@ public class BlogsController : ControllerBase
     {
         var username = User.FindFirstValue(ClaimTypes.Name);
         var role = User.FindFirstValue(ClaimTypes.Role);
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(role))
         {
             return Unauthorized(new { message = "Current user is not authenticated." });
         }
 
+        if (!long.TryParse(userIdStr, out var authorId))
+        {
+            return Unauthorized(new { message = "Current user is not authenticated." });
+        }
+
         try
         {
-            var createdBlogPost = await _blogService.CreateAsync(username, role, request, cancellationToken);
+            var createdBlogPost = await _blogService.CreateAsync(username, role, authorId, request, cancellationToken);
             return Created($"/api/blogs/{createdBlogPost.Id}", createdBlogPost);
         }
         catch (ArgumentException exception)
@@ -136,6 +159,7 @@ public class BlogsController : ControllerBase
     [ProducesResponseType(typeof(BlogCommentResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<BlogCommentResponseDto>> AddComment(
         long blogId,
@@ -144,15 +168,21 @@ public class BlogsController : ControllerBase
     {
         var username = User.FindFirstValue(ClaimTypes.Name);
         var role = User.FindFirstValue(ClaimTypes.Role);
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(role))
         {
             return Unauthorized(new { message = "Current user is not authenticated." });
         }
 
+        if (!long.TryParse(userIdStr, out var commenterId))
+        {
+            return Unauthorized(new { message = "Current user is not authenticated." });
+        }
+
         try
         {
-            var createdComment = await _blogService.AddCommentAsync(blogId, username, role, request, cancellationToken);
+            var createdComment = await _blogService.AddCommentAsync(blogId, username, role, commenterId, request, cancellationToken);
             return Created($"/api/blogs/{blogId}/comments/{createdComment.Id}", createdComment);
         }
         catch (ArgumentException exception)
@@ -165,7 +195,7 @@ public class BlogsController : ControllerBase
         }
         catch (UnauthorizedAccessException exception)
         {
-            return Unauthorized(new { message = exception.Message });
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = exception.Message });
         }
     }
 

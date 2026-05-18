@@ -211,6 +211,10 @@ func (h *TourHandler) AddReview(c *gin.Context) {
 
 	review, err := h.tourService.AddReview(c.Request.Context(), tourID, req)
 	if err != nil {
+		if errors.Is(err, service.ErrFutureDate) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Visited date cannot be in the future."})
+			return
+		}
 		if errors.Is(err, service.ErrInvalidInput) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "rating must be 1-5, comment, touristId, touristUsername and visitedDate are required"})
 			return

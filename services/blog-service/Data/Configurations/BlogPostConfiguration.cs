@@ -30,6 +30,10 @@ public class BlogPostConfiguration : IEntityTypeConfiguration<BlogPost>
             .HasMaxLength(100)
             .IsRequired();
 
+        builder.Property(post => post.AuthorId)
+            .IsRequired()
+            .HasDefaultValue(0L);
+
         builder.HasMany(post => post.Images)
             .WithOne(image => image.BlogPost)
             .HasForeignKey(image => image.BlogPostId)

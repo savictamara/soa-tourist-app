@@ -92,9 +92,12 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: Host=blog-db;Port=5432;Database=blog_db;Username=postgres;Password=root
+      FollowerService__BaseUrl: http://follower-service:8086
     depends_on:
       blog-db:
         condition: service_healthy
+      follower-service:
+        condition: service_started
     networks:
       - application
       - database

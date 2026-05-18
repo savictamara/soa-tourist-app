@@ -81,7 +81,7 @@
       <textarea id="comment" name="comment" rows="3" [(ngModel)]="reviewForm.comment"></textarea>
 
       <label for="visitedDate">Visited Date</label>
-      <input id="visitedDate" type="date" name="visitedDate" [(ngModel)]="reviewForm.visitedDate">
+      <input id="visitedDate" type="date" name="visitedDate" [(ngModel)]="reviewForm.visitedDate" [max]="todayString">
 
       <label class="drop-zone"
         [class.active]="reviewImageDragActive"

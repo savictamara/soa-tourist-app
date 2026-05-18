@@ -252,7 +252,11 @@ export class BlogCreateComponent implements OnInit {
       },
       error: (error) => {
         this.commentSubmittingByBlogId[blog.id] = false;
-        this.errorMessage = error.error?.message ?? 'Could not create comment.';
+        if (error.status === 403) {
+          this.errorMessage = 'You must follow the author before commenting on this blog.';
+        } else {
+          this.errorMessage = error.error?.message ?? 'Could not create comment.';
+        }
       }
     });
   }
@@ -360,7 +364,19 @@ export class BlogCreateComponent implements OnInit {
     this.isLoadingBlogs = true;
     this.errorMessage = '';
 
-    this.blogApiService.getBlogs().subscribe({
+    const user = this.authStateService.currentUser;
+    console.log('Blog current user', user);
+
+    if (!user) {
+      this.blogs = [];
+      this.isLoadingBlogs = false;
+      return;
+    }
+
+    const userId = user.id;
+    console.log('Loading followed blogs for userId', userId);
+
+    this.blogApiService.getFollowedBlogs(userId).subscribe({
       next: (blogs) => {
         this.blogs = blogs.map(blog => ({
           ...blog,

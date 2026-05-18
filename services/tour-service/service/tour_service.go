@@ -15,6 +15,7 @@ import (
 )
 
 var ErrInvalidInput = errors.New("invalid input")
+var ErrFutureDate = errors.New("visited date cannot be in the future")
 
 type TourService struct {
 	repo *repository.TourRepository
@@ -177,6 +178,16 @@ func (s *TourService) AddReview(ctx context.Context, tourID primitive.ObjectID, 
 		strings.TrimSpace(req.TouristUsername) == "" ||
 		strings.TrimSpace(req.VisitedDate) == "" {
 		return models.Review{}, ErrInvalidInput
+	}
+
+	visitedDate := strings.TrimSpace(req.VisitedDate)
+	parsedDate, parseErr := time.Parse("2006-01-02", visitedDate)
+	if parseErr != nil {
+		return models.Review{}, fmt.Errorf("%w: visitedDate must be in YYYY-MM-DD format", ErrInvalidInput)
+	}
+	today := time.Now().UTC().Truncate(24 * time.Hour)
+	if parsedDate.After(today) {
+		return models.Review{}, ErrFutureDate
 	}
 
 	now := time.Now().UTC()

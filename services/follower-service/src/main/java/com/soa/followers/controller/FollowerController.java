@@ -71,4 +71,9 @@ public class FollowerController {
     public List<String> getFollowedAuthorIds(@PathVariable String userId) {
         return followerService.getFollowedAuthorIds(userId);
     }
+
+    @GetMapping("/{followerId}/follows/{targetId}")
+    public boolean isFollowing(@PathVariable String followerId, @PathVariable String targetId) {
+        return followerService.isFollowing(followerId, targetId);
+    }
 }

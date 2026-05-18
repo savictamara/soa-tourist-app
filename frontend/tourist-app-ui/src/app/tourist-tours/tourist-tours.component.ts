@@ -32,6 +32,10 @@ export class TouristToursComponent implements OnInit {
     private readonly authStateService: AuthStateService
   ) {}
 
+  get todayString(): string {
+    return new Date().toISOString().split('T')[0];
+  }
+
   ngOnInit(): void {
     this.loadTours();
   }
@@ -90,6 +94,10 @@ export class TouristToursComponent implements OnInit {
     }
     if (!this.reviewForm.comment.trim() || !this.reviewForm.visitedDate) {
       this.errorMessage = 'Comment and visited date are required.';
+      return;
+    }
+    if (this.reviewForm.visitedDate > this.todayString) {
+      this.errorMessage = 'Visited date cannot be in the future.';
       return;
     }
 

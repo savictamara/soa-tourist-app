@@ -3,6 +3,7 @@
     <div>
       <h2>Blog</h2>
       <p class="panel-text">View existing blogs and create a new one when needed.</p>
+      <p class="panel-text">You can view your own blogs and blogs from users you follow.</p>
     </div>
     <button
       *ngIf="canCreateBlog && !isCreateFormVisible"
@@ -14,7 +15,7 @@
   </div>
 
   <p *ngIf="!isCreateFormVisible && isLoadingBlogs" class="state">Loading blogs...</p>
-  <p *ngIf="!isCreateFormVisible && !isLoadingBlogs && blogs.length === 0" class="state">No blogs yet.</p>
+  <p *ngIf="!isCreateFormVisible && !isLoadingBlogs && blogs.length === 0" class="state">No blogs available. Create a blog or follow some users to see their blogs.</p>
 
   <div *ngIf="!isCreateFormVisible && !isLoadingBlogs && blogs.length > 0" class="blogs-list">
     <article *ngFor="let blog of blogs" class="blog-card">

@@ -19,6 +19,10 @@ export class BlogApiService {
     return this.http.get<BlogPost[]>(`${this.baseUrl}/blogs`);
   }
 
+  getFollowedBlogs(userId: number): Observable<BlogPost[]> {
+    return this.http.get<BlogPost[]>(`${this.baseUrl}/blogs/followed/${userId}`);
+  }
+
   createBlog(request: CreateBlogPostRequest): Observable<BlogPost> {
     return this.http.post<BlogPost>(`${this.baseUrl}/blogs`, request);
   }

@@ -2,50 +2,176 @@
   display: block;
 }
 
+/* ── Panel shell ─────────────────────────────────────────── */
 .panel {
   background: #fffafc;
   border: 1px solid #ffd7e5;
   border-radius: 24px;
   padding: 1.5rem;
+  display: grid;
+  gap: 1.5rem;
 }
 
 h2,
 h3,
 h4 {
   color: #a8486e;
+  margin: 0 0 0.25rem;
+}
+
+em {
+  font-style: normal;
+  color: #c0587f;
 }
 
 .panel-text {
-  margin-top: 0;
+  margin: 0;
   color: #8e6172;
 }
 
-.tour-form {
-  display: grid;
-  gap: 0.85rem;
-  margin-bottom: 1rem;
+.author-line {
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
 }
 
-label {
+.label-hint {
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: #b07090;
+}
+
+/* ── Section cards ───────────────────────────────────────── */
+.section-card {
+  background: white;
+  border: 1px solid #f0bfd1;
+  border-radius: 18px;
+  padding: 1.25rem 1.5rem;
   display: grid;
-  gap: 0.3rem;
+  gap: 1rem;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.section-header h3 {
+  margin: 0;
+}
+
+/* ── Tours grid ──────────────────────────────────────────── */
+.tours-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+/* ── Tour card ───────────────────────────────────────────── */
+.tour-card {
+  border: 1.5px solid #f0bfd1;
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  background: #fff8fb;
+  display: grid;
+  gap: 0.65rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.tour-card:hover {
+  border-color: #ef7fa8;
+  box-shadow: 0 2px 8px #ffc1d640;
+}
+
+.tour-card-selected {
+  border-color: #ef7fa8;
+  background: #fff0f6;
+  box-shadow: 0 0 0 3px #ffc1d660;
+}
+
+.tour-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.tour-card-name {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #a8486e;
+  flex: 1;
+}
+
+.tour-card-description {
+  margin: 0;
   color: #7c5062;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Status badge ────────────────────────────────────────── */
+.status-badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.status-draft {
+  background: #ffdbe8;
+  color: #8d3f5f;
+}
+
+.status-published {
+  background: #d4f5e4;
+  color: #2e7d5a;
+}
+
+/* ── Meta badges row ─────────────────────────────────────── */
+.tour-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.meta-badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.18rem 0.6rem;
+  font-size: 0.8rem;
   font-weight: 600;
 }
 
-input,
-textarea,
-select {
-  width: 100%;
-  border: 1px solid #f0bfd1;
-  border-radius: 14px;
-  padding: 0.9rem 1rem;
-  background: white;
-  font: inherit;
+.diff-badge {
+  background: #fce4ec;
+  color: #8d3f5f;
 }
 
-textarea {
-  resize: vertical;
+.price-badge {
+  background: #e8f5e9;
+  color: #388e3c;
+}
+
+.kp-badge {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+/* ── Tags ────────────────────────────────────────────────── */
+.tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
 }
 
 .tags-list {
@@ -66,6 +192,11 @@ textarea {
   font-weight: 600;
 }
 
+.small-tag {
+  font-size: 0.78rem;
+  padding: 0.2rem 0.55rem;
+}
+
 .remove-tag {
   border: 0;
   background: transparent;
@@ -75,12 +206,90 @@ textarea {
   padding: 0;
 }
 
+/* ── Manage key points button ────────────────────────────── */
+.manage-kp-btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.7rem 1rem;
+  background: #ffc1d6;
+  color: #8d3f5f;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  width: 100%;
+}
+
+.manage-kp-btn:hover {
+  background: #ef7fa8;
+  color: white;
+}
+
+.manage-kp-btn.managing {
+  background: #ef7fa8;
+  color: white;
+}
+
+/* ── Selected tour section ───────────────────────────────── */
+.selected-section {
+  border-color: #ef7fa8;
+}
+
+/* ── Create/edit forms ───────────────────────────────────── */
+.tour-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.kp-form {
+  border-top: 1px solid #f0bfd1;
+  padding-top: 0.9rem;
+  margin-top: 0.25rem;
+}
+
+label {
+  display: grid;
+  gap: 0.3rem;
+  color: #7c5062;
+  font-weight: 600;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  border: 1px solid #f0bfd1;
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  background: white;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.coord-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.coord-text {
+  font-size: 0.85rem;
+  color: #8e6172;
+  margin: 0;
+}
+
 .actions {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
 }
 
+/* ── Buttons ─────────────────────────────────────────────── */
 button {
   border: 0;
   border-radius: 999px;
@@ -92,50 +301,43 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .secondary-button {
   background: #ffc1d6;
   color: #8d3f5f;
 }
 
-.tour-list {
-  margin-top: 1rem;
+.danger-button {
+  background: #f87171;
+  color: white;
 }
 
-.tour-items {
-  display: grid;
-  gap: 0.6rem;
-}
-
-.tour-item {
-  text-align: left;
-  border: 1px solid #f0bfd1;
-  border-radius: 14px;
-  background: #fff4f8;
-  color: #7c5062;
-  display: grid;
-  gap: 0.2rem;
-}
-
-.tour-item.selected {
-  background: #ef7fa8;
-  color: #fff;
-}
-
-.key-point-section {
-  margin-top: 1.25rem;
-  padding-top: 1rem;
-  border-top: 1px solid #f0bfd1;
-}
-
+/* ── Map ─────────────────────────────────────────────────── */
 .map-container {
   width: 100%;
-  height: 300px;
-  min-height: 300px;
+  height: 320px;
+  min-height: 320px;
   border: 1px solid #f0bfd1;
   border-radius: 14px;
   overflow: hidden;
 }
 
+.map-hint {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  color: #8e6172;
+}
+
+.map-hint.editing {
+  color: #a8486e;
+  font-weight: 600;
+}
+
+/* ── Image fields ────────────────────────────────────────── */
 .image-field {
   display: grid;
   gap: 0.6rem;
@@ -144,7 +346,7 @@ button {
 .drop-zone {
   display: grid;
   place-items: center;
-  min-height: 124px;
+  min-height: 110px;
   border: 2px dashed #f0bfd1;
   border-radius: 14px;
   background: #fff4f8;
@@ -180,20 +382,13 @@ button {
   border: 1px solid #f0bfd1;
 }
 
-.review-images-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.review-image-item {
-  display: grid;
-  gap: 0.35rem;
-}
-
+/* ── Key point list ──────────────────────────────────────── */
 .key-point-list {
   display: grid;
   gap: 0.7rem;
+  border-top: 1px solid #f0bfd1;
+  padding-top: 0.9rem;
+  margin-top: 0.25rem;
 }
 
 .key-point-card {
@@ -206,24 +401,6 @@ button {
 .key-point-card h4,
 .key-point-card p {
   margin: 0.2rem 0;
-}
-
-.map-hint {
-  margin: 0.4rem 0 0;
-  font-size: 0.85rem;
-  color: #8e6172;
-}
-
-.map-hint.editing {
-  color: #a8486e;
-  font-weight: 600;
-}
-
-.edit-form {
-  border: 2px solid #ef7fa8;
-  border-radius: 14px;
-  padding: 1rem;
-  background: #fff4f8;
 }
 
 .key-point-card-header {
@@ -255,15 +432,21 @@ button {
   background: #fff0f5;
 }
 
-.danger-button {
-  background: #f87171;
-  color: white;
+/* ── Edit form overlay ───────────────────────────────────── */
+.edit-form {
+  border: 2px solid #ef7fa8;
+  border-radius: 14px;
+  padding: 1rem;
+  background: #fff4f8;
 }
 
+/* ── State messages ──────────────────────────────────────── */
 .state {
-  margin-bottom: 0;
+  margin: 0;
   padding: 0.85rem 1rem;
   border-radius: 14px;
+  color: #8e6172;
+  background: #fff4f8;
 }
 
 .success {
@@ -274,4 +457,12 @@ button {
 .error {
   background: #ffe3e8;
   color: #b34366;
+}
+
+/* ── Tour header ─────────────────────────────────────────── */
+.tour-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
 }
