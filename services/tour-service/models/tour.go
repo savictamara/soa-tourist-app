@@ -19,18 +19,28 @@ type KeyPoint struct {
 }
 
 type Tour struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	AuthorID    string             `bson:"authorId" json:"authorId"`
-	Name        string             `bson:"name" json:"name"`
-	Description string             `bson:"description" json:"description"`
-	Difficulty  string             `bson:"difficulty" json:"difficulty"`
-	Tags        []string           `bson:"tags" json:"tags"`
-	Status      string             `bson:"status" json:"status"`
-	Price       float64            `bson:"price" json:"price"`
-	KeyPoints   []KeyPoint         `bson:"keyPoints" json:"keyPoints"`
-	Reviews     []Review           `bson:"reviews" json:"reviews"`
-	CreatedAt   time.Time          `bson:"createdAt" json:"createdAt"`
-	UpdatedAt   time.Time          `bson:"updatedAt" json:"updatedAt"`
+	ID            primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	AuthorID      string             `bson:"authorId" json:"authorId"`
+	Name          string             `bson:"name" json:"name"`
+	Description   string             `bson:"description" json:"description"`
+	Difficulty    string             `bson:"difficulty" json:"difficulty"`
+	Tags          []string           `bson:"tags" json:"tags"`
+	Status        string             `bson:"status" json:"status"`
+	PublishedAt   *time.Time         `bson:"publishedAt,omitempty" json:"publishedAt,omitempty"`
+	ArchivedAt    *time.Time         `bson:"archivedAt,omitempty" json:"archivedAt,omitempty"`
+	ReactivatedAt *time.Time         `bson:"reactivatedAt,omitempty" json:"reactivatedAt,omitempty"`
+	LengthKm      float64            `bson:"lengthKm" json:"lengthKm"`
+	Durations     []TourDuration     `bson:"durations" json:"durations"`
+	Price         float64            `bson:"price" json:"price"`
+	KeyPoints     []KeyPoint         `bson:"keyPoints" json:"keyPoints"`
+	Reviews       []Review           `bson:"reviews" json:"reviews"`
+	CreatedAt     time.Time          `bson:"createdAt" json:"createdAt"`
+	UpdatedAt     time.Time          `bson:"updatedAt" json:"updatedAt"`
+}
+
+type TourDuration struct {
+	TransportType string `bson:"transportType" json:"transportType"`
+	Minutes       int    `bson:"minutes" json:"minutes"`
 }
 
 type Review struct {
@@ -66,6 +76,10 @@ type UpdateKeyPointRequest struct {
 	Latitude    float64 `json:"latitude"`
 	Longitude   float64 `json:"longitude"`
 	ImageURL    string  `json:"imageUrl"`
+}
+
+type UpdateDurationsRequest struct {
+	Durations []TourDuration `json:"durations"`
 }
 
 type CreateReviewRequest struct {

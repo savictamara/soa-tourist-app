@@ -70,7 +70,8 @@
           <h4 class="tour-card-name">{{ tour.name }}</h4>
           <span class="status-badge"
             [class.status-draft]="tour.status === 'draft'"
-            [class.status-published]="tour.status === 'published'">
+            [class.status-published]="tour.status === 'published'"
+            [class.status-archived]="tour.status === 'archived'">
             {{ tour.status }}
           </span>
         </div>
@@ -83,6 +84,18 @@
           <span class="meta-badge kp-badge">
             {{ (tour.keyPoints || []).length }}
             key point{{ (tour.keyPoints || []).length === 1 ? '' : 's' }}
+          </span>
+          <span class="meta-badge length-badge">{{ tour.lengthKm || 0 }} km</span>
+        </div>
+
+        <div class="tour-dates">
+          <span *ngIf="tour.publishedAt">Published: {{ tour.publishedAt | date:'short' }}</span>
+          <span *ngIf="tour.archivedAt">Archived: {{ tour.archivedAt | date:'short' }}</span>
+        </div>
+
+        <div class="durations-row" *ngIf="(tour.durations || []).length > 0">
+          <span class="duration-chip" *ngFor="let duration of tour.durations">
+            {{ duration.transportType }} {{ duration.minutes }} min
           </span>
         </div>
 
@@ -97,6 +110,33 @@
           (click)="selectTour(tour.id)">
           {{ tour.id === selectedTourId ? '✓ Managing Key Points' : 'Manage Key Points' }}
         </button>
+
+        <div class="tour-actions">
+          <button
+            *ngIf="tour.status === 'draft'"
+            type="button"
+            class="secondary-button compact-button"
+            (click)="publishTour(tour)"
+            [disabled]="lifecycleActionTourId === tour.id">
+            {{ lifecycleActionTourId === tour.id ? 'Publishing...' : 'Publish' }}
+          </button>
+          <button
+            *ngIf="tour.status === 'published'"
+            type="button"
+            class="secondary-button compact-button"
+            (click)="archiveTour(tour)"
+            [disabled]="lifecycleActionTourId === tour.id">
+            {{ lifecycleActionTourId === tour.id ? 'Archiving...' : 'Archive' }}
+          </button>
+          <button
+            *ngIf="tour.status === 'archived'"
+            type="button"
+            class="secondary-button compact-button"
+            (click)="reactivateTour(tour)"
+            [disabled]="lifecycleActionTourId === tour.id">
+            {{ lifecycleActionTourId === tour.id ? 'Reactivating...' : 'Reactivate' }}
+          </button>
+        </div>
       </article>
     </div>
   </div>
@@ -104,6 +144,32 @@
   <!-- ── Selected Tour: Key Points ─────────────────────── -->
   <div *ngIf="selectedTour && canCreateTours" class="section-card selected-section">
     <h3>Key Points — <em>{{ selectedTour.name }}</em></h3>
+    <div class="selected-summary">
+      <span class="meta-badge length-badge">Length: {{ selectedTour.lengthKm || 0 }} km</span>
+      <span class="meta-badge diff-badge">Status: {{ selectedTour.status }}</span>
+    </div>
+
+    <div class="duration-manager">
+      <h4>Durations</h4>
+      <div class="duration-list" *ngIf="(selectedTour.durations || []).length > 0">
+        <span class="duration-chip" *ngFor="let duration of selectedTour.durations">
+          {{ duration.transportType }} {{ duration.minutes }} min
+          <button type="button" class="remove-tag" (click)="removeDuration(duration.transportType)">×</button>
+        </span>
+      </div>
+      <div class="duration-form">
+        <select name="durationTransportType" [(ngModel)]="durationForm.transportType">
+          <option value="walking">walking</option>
+          <option value="bicycle">bicycle</option>
+          <option value="car">car</option>
+        </select>
+        <input type="number" min="1" name="durationMinutes" [(ngModel)]="durationForm.minutes" placeholder="Minutes">
+        <button type="button" class="secondary-button" (click)="addDuration()">Add duration</button>
+        <button type="button" (click)="saveDurations()" [disabled]="isSavingDurations">
+          {{ isSavingDurations ? 'Saving...' : 'Save durations' }}
+        </button>
+      </div>
+    </div>
 
     <!-- Map -->
     <div id="tour-key-point-map" class="map-container"></div>

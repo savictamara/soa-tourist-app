@@ -137,6 +137,11 @@ em {
   color: #2e7d5a;
 }
 
+.status-archived {
+  background: #eeeeee;
+  color: #666666;
+}
+
 /* ── Meta badges row ─────────────────────────────────────── */
 .tour-meta-row {
   display: flex;
@@ -165,6 +170,62 @@ em {
 .kp-badge {
   background: #e3f2fd;
   color: #1565c0;
+}
+
+.length-badge {
+  background: #fff3cd;
+  color: #8a6d1f;
+}
+
+.tour-dates {
+  display: grid;
+  gap: 0.2rem;
+  color: #8e6172;
+  font-size: 0.82rem;
+}
+
+.durations-row,
+.duration-list,
+.selected-summary,
+.tour-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.duration-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #ffe9f2;
+  border: 1px solid #f0bfd1;
+  color: #8d3f5f;
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.compact-button {
+  width: auto;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.84rem;
+}
+
+.duration-manager {
+  display: grid;
+  gap: 0.75rem;
+  border: 1px solid #f0bfd1;
+  border-radius: 14px;
+  background: #fff8fb;
+  padding: 0.9rem;
+}
+
+.duration-form {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) minmax(120px, 1fr) auto auto;
+  gap: 0.6rem;
+  align-items: center;
 }
 
 /* ── Tags ────────────────────────────────────────────────── */
@@ -465,4 +526,10 @@ button:disabled {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
+}
+
+@media (max-width: 760px) {
+  .duration-form {
+    grid-template-columns: 1fr;
+  }
 }

@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
 import { KeyPoint } from '../models/key-point.model';
-import { CreateKeyPointRequest, CreateTourRequest, Tour, UpdateKeyPointRequest } from '../models/tour.model';
+import { CreateKeyPointRequest, CreateTourRequest, Tour, TourDuration, UpdateKeyPointRequest } from '../models/tour.model';
 import { AuthStateService } from '../services/auth-state.service';
 import { TourApiService } from '../services/tour-api.service';
 import { finalize } from 'rxjs';
@@ -35,6 +35,11 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
     imageUrl: ''
   };
 
+  durationForm = {
+    transportType: 'walking' as TourDuration['transportType'],
+    minutes: null as number | null
+  };
+
   tours: Tour[] = [];
   selectedTourId = '';
   selectedTour: Tour | null = null;
@@ -44,6 +49,8 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
   isAddingKeyPoint = false;
   isUpdatingKeyPoint = false;
   isDeletingKeyPointId: string | null = null;
+  isSavingDurations = false;
+  lifecycleActionTourId: string | null = null;
   isLoadingTours = false;
   isLoadingKeyPoints = false;
   editingKeyPoint: KeyPoint | null = null;
@@ -332,7 +339,7 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
       next: () => {
         this.successMessage = 'Key point updated.';
         this.cancelEdit();
-        this.loadKeyPoints();
+        this.loadToursByAuthor(this.getAuthorId(), this.selectedTourId);
         this.isUpdatingKeyPoint = false;
       },
       error: (error) => {
@@ -356,13 +363,74 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
           this.cancelEdit();
         }
         this.isDeletingKeyPointId = null;
-        this.loadKeyPoints();
+        this.loadToursByAuthor(this.getAuthorId(), this.selectedTourId);
       },
       error: (error) => {
         this.errorMessage = error.error?.error ?? 'Could not delete key point.';
         this.isDeletingKeyPointId = null;
       }
     });
+  }
+
+  addDuration(): void {
+    if (!this.selectedTour) {
+      this.errorMessage = 'Select a tour first.';
+      return;
+    }
+    if (!this.durationForm.minutes || this.durationForm.minutes <= 0) {
+      this.errorMessage = 'Duration minutes must be greater than 0.';
+      return;
+    }
+    const existing = this.selectedTour.durations ?? [];
+    if (existing.some(duration => duration.transportType === this.durationForm.transportType)) {
+      this.errorMessage = 'Duration for this transport type already exists.';
+      return;
+    }
+    const duration: TourDuration = {
+      transportType: this.durationForm.transportType,
+      minutes: this.durationForm.minutes
+    };
+    this.updateSelectedTourDurations([...existing, duration]);
+    this.durationForm = { transportType: 'walking', minutes: null };
+    this.errorMessage = '';
+  }
+
+  removeDuration(transportType: string): void {
+    if (!this.selectedTour) return;
+    this.updateSelectedTourDurations((this.selectedTour.durations ?? []).filter(duration => duration.transportType !== transportType));
+  }
+
+  saveDurations(): void {
+    if (!this.selectedTour) {
+      this.errorMessage = 'Select a tour first.';
+      return;
+    }
+    this.isSavingDurations = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.tourApiService.updateDurations(this.selectedTour.id, { durations: this.selectedTour.durations ?? [] }).subscribe({
+      next: (tour) => {
+        this.upsertTour(tour);
+        this.successMessage = 'Durations saved.';
+        this.isSavingDurations = false;
+      },
+      error: (error) => {
+        this.errorMessage = error.error?.error ?? 'Could not save durations.';
+        this.isSavingDurations = false;
+      }
+    });
+  }
+
+  publishTour(tour: Tour): void {
+    this.runLifecycleAction(tour.id, () => this.tourApiService.publishTour(tour.id), 'Tour published.');
+  }
+
+  archiveTour(tour: Tour): void {
+    this.runLifecycleAction(tour.id, () => this.tourApiService.archiveTour(tour.id), 'Tour archived.');
+  }
+
+  reactivateTour(tour: Tour): void {
+    this.runLifecycleAction(tour.id, () => this.tourApiService.reactivateTour(tour.id), 'Tour reactivated.');
   }
 
   private loadKeyPoints(): void {
@@ -506,8 +574,47 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
       ...tour,
       tags: Array.isArray(tour.tags) ? tour.tags : [],
       keyPoints: Array.isArray(tour.keyPoints) ? tour.keyPoints : [],
-      reviews: Array.isArray(tour.reviews) ? tour.reviews : []
+      reviews: Array.isArray(tour.reviews) ? tour.reviews : [],
+      durations: Array.isArray(tour.durations) ? tour.durations : [],
+      lengthKm: Number(tour.lengthKm ?? 0)
     };
+  }
+
+  private updateSelectedTourDurations(durations: TourDuration[]): void {
+    if (!this.selectedTour) return;
+    const updated = this.normalizeTour({ ...this.selectedTour, durations });
+    this.selectedTour = updated;
+    this.tours = this.tours.map(tour => tour.id === updated.id ? updated : tour);
+  }
+
+  private upsertTour(tour: Tour): void {
+    const normalized = this.normalizeTour(tour);
+    this.tours = this.tours.map(existing => existing.id === normalized.id ? normalized : existing);
+    if (!this.tours.some(existing => existing.id === normalized.id)) {
+      this.tours = [normalized, ...this.tours];
+    }
+    if (this.selectedTourId === normalized.id) {
+      this.selectedTour = normalized;
+      this.selectedTourKeyPoints = normalized.keyPoints ?? this.selectedTourKeyPoints;
+      this.renderTourOnMap();
+    }
+  }
+
+  private runLifecycleAction(tourId: string, action: () => any, successMessage: string): void {
+    this.lifecycleActionTourId = tourId;
+    this.errorMessage = '';
+    this.successMessage = '';
+    action().subscribe({
+      next: (tour: Tour) => {
+        this.upsertTour(tour);
+        this.successMessage = successMessage;
+        this.lifecycleActionTourId = null;
+      },
+      error: (error: any) => {
+        this.errorMessage = error.error?.error ?? 'Tour status could not be changed.';
+        this.lifecycleActionTourId = null;
+      }
+    });
   }
 
   private normalizeKeyPoint(keyPoint: KeyPoint): KeyPoint {

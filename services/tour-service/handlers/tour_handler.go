@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strings"
 
 	"tour-service/models"
 	"tour-service/service"
@@ -89,6 +90,113 @@ func (h *TourHandler) GetTours(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, tours)
+}
+
+func (h *TourHandler) GetPublishedTours(c *gin.Context) {
+	tours, err := h.tourService.GetPublishedTours(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch published tours"})
+		return
+	}
+	c.JSON(http.StatusOK, tours)
+}
+
+func (h *TourHandler) UpdateDurations(c *gin.Context) {
+	tourID, ok := parseObjectID(c, "tourId")
+	if !ok {
+		return
+	}
+
+	var req models.UpdateDurationsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+		return
+	}
+
+	tour, err := h.tourService.UpdateDurations(c.Request.Context(), tourID, req)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidInput) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": validationMessage(err)})
+			return
+		}
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "tour not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update durations"})
+		return
+	}
+
+	c.JSON(http.StatusOK, tour)
+}
+
+func (h *TourHandler) PublishTour(c *gin.Context) {
+	tourID, ok := parseObjectID(c, "tourId")
+	if !ok {
+		return
+	}
+
+	tour, err := h.tourService.PublishTour(c.Request.Context(), tourID)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidInput) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": validationMessage(err)})
+			return
+		}
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "tour not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to publish tour"})
+		return
+	}
+
+	c.JSON(http.StatusOK, tour)
+}
+
+func (h *TourHandler) ArchiveTour(c *gin.Context) {
+	tourID, ok := parseObjectID(c, "tourId")
+	if !ok {
+		return
+	}
+
+	tour, err := h.tourService.ArchiveTour(c.Request.Context(), tourID)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidInput) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": validationMessage(err)})
+			return
+		}
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "tour not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to archive tour"})
+		return
+	}
+
+	c.JSON(http.StatusOK, tour)
+}
+
+func (h *TourHandler) ReactivateTour(c *gin.Context) {
+	tourID, ok := parseObjectID(c, "tourId")
+	if !ok {
+		return
+	}
+
+	tour, err := h.tourService.ReactivateTour(c.Request.Context(), tourID)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidInput) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": validationMessage(err)})
+			return
+		}
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "tour not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to reactivate tour"})
+		return
+	}
+
+	c.JSON(http.StatusOK, tour)
 }
 
 func (h *TourHandler) AddKeyPoint(c *gin.Context) {
@@ -257,4 +365,8 @@ func parseObjectID(c *gin.Context, paramName string) (primitive.ObjectID, bool) 
 		return primitive.NilObjectID, false
 	}
 	return id, true
+}
+
+func validationMessage(err error) string {
+	return strings.TrimPrefix(err.Error(), service.ErrInvalidInput.Error()+": ")
 }

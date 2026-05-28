@@ -38,15 +38,7 @@ func (r *TourRepository) GetByID(ctx context.Context, id primitive.ObjectID) (mo
 	var tour models.Tour
 	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&tour)
 	if err == nil {
-		if tour.Tags == nil {
-			tour.Tags = []string{}
-		}
-		if tour.KeyPoints == nil {
-			tour.KeyPoints = []models.KeyPoint{}
-		}
-		if tour.Reviews == nil {
-			tour.Reviews = []models.Review{}
-		}
+		normalizeTour(&tour)
 	}
 	return tour, err
 }
@@ -66,17 +58,7 @@ func (r *TourRepository) GetByAuthorID(ctx context.Context, authorID string) ([]
 	if tours == nil {
 		return []models.Tour{}, nil
 	}
-	for i := range tours {
-		if tours[i].Tags == nil {
-			tours[i].Tags = []string{}
-		}
-		if tours[i].KeyPoints == nil {
-			tours[i].KeyPoints = []models.KeyPoint{}
-		}
-		if tours[i].Reviews == nil {
-			tours[i].Reviews = []models.Review{}
-		}
-	}
+	normalizeTours(tours)
 	return tours, nil
 }
 
@@ -95,17 +77,26 @@ func (r *TourRepository) GetAll(ctx context.Context) ([]models.Tour, error) {
 	if tours == nil {
 		return []models.Tour{}, nil
 	}
-	for i := range tours {
-		if tours[i].Tags == nil {
-			tours[i].Tags = []string{}
-		}
-		if tours[i].KeyPoints == nil {
-			tours[i].KeyPoints = []models.KeyPoint{}
-		}
-		if tours[i].Reviews == nil {
-			tours[i].Reviews = []models.Review{}
-		}
+	normalizeTours(tours)
+	return tours, nil
+}
+
+func (r *TourRepository) GetPublished(ctx context.Context) ([]models.Tour, error) {
+	findOpts := options.Find().SetSort(bson.D{{Key: "publishedAt", Value: -1}, {Key: "createdAt", Value: -1}})
+	cur, err := r.collection.Find(ctx, bson.M{"status": "published"}, findOpts)
+	if err != nil {
+		return nil, err
 	}
+	defer cur.Close(ctx)
+
+	var tours []models.Tour
+	if err = cur.All(ctx, &tours); err != nil {
+		return nil, err
+	}
+	if tours == nil {
+		return []models.Tour{}, nil
+	}
+	normalizeTours(tours)
 	return tours, nil
 }
 
@@ -191,6 +182,51 @@ func (r *TourRepository) DeleteKeyPoint(ctx context.Context, tourID primitive.Ob
 	return r.GetByID(ctx, tourID)
 }
 
+func (r *TourRepository) UpdateLength(ctx context.Context, tourID primitive.ObjectID, lengthKm float64, updatedAt time.Time) (models.Tour, error) {
+	update := bson.M{
+		"$set": bson.M{
+			"lengthKm":  lengthKm,
+			"updatedAt": updatedAt,
+		},
+	}
+	res, err := r.collection.UpdateOne(ctx, bson.M{"_id": tourID}, update)
+	if err != nil {
+		return models.Tour{}, err
+	}
+	if res.MatchedCount == 0 {
+		return models.Tour{}, mongo.ErrNoDocuments
+	}
+	return r.GetByID(ctx, tourID)
+}
+
+func (r *TourRepository) UpdateDurations(ctx context.Context, tourID primitive.ObjectID, durations []models.TourDuration, updatedAt time.Time) (models.Tour, error) {
+	update := bson.M{
+		"$set": bson.M{
+			"durations": durations,
+			"updatedAt": updatedAt,
+		},
+	}
+	res, err := r.collection.UpdateOne(ctx, bson.M{"_id": tourID}, update)
+	if err != nil {
+		return models.Tour{}, err
+	}
+	if res.MatchedCount == 0 {
+		return models.Tour{}, mongo.ErrNoDocuments
+	}
+	return r.GetByID(ctx, tourID)
+}
+
+func (r *TourRepository) UpdateLifecycle(ctx context.Context, tourID primitive.ObjectID, update bson.M) (models.Tour, error) {
+	res, err := r.collection.UpdateOne(ctx, bson.M{"_id": tourID}, update)
+	if err != nil {
+		return models.Tour{}, err
+	}
+	if res.MatchedCount == 0 {
+		return models.Tour{}, mongo.ErrNoDocuments
+	}
+	return r.GetByID(ctx, tourID)
+}
+
 func (r *TourRepository) AddReview(ctx context.Context, tourID primitive.ObjectID, review models.Review, updatedAt time.Time) error {
 	update := bson.M{
 		"$push": bson.M{
@@ -208,4 +244,28 @@ func (r *TourRepository) AddReview(ctx context.Context, tourID primitive.ObjectI
 		return mongo.ErrNoDocuments
 	}
 	return nil
+}
+
+func normalizeTours(tours []models.Tour) {
+	for i := range tours {
+		normalizeTour(&tours[i])
+	}
+}
+
+func normalizeTour(tour *models.Tour) {
+	if tour.Tags == nil {
+		tour.Tags = []string{}
+	}
+	if tour.KeyPoints == nil {
+		tour.KeyPoints = []models.KeyPoint{}
+	}
+	if tour.Reviews == nil {
+		tour.Reviews = []models.Review{}
+	}
+	if tour.Durations == nil {
+		tour.Durations = []models.TourDuration{}
+	}
+	if tour.Status == "" {
+		tour.Status = "draft"
+	}
 }
