@@ -19,6 +19,14 @@
           <div class="metadata-item">Tezina: {{ tour.difficulty }}</div>
           <div class="metadata-item">Status: {{ tour.status }}</div>
           <div class="metadata-item">Cena: {{ tour.price }}</div>
+          <div class="metadata-item">Duzina: {{ tour.lengthKm || 0 }} km</div>
+        </div>
+
+        <div class="tour-tags-section" *ngIf="(tour.durations || []).length > 0">
+          <p class="section-label">Trajanje:</p>
+          <span class="tag-badge" *ngFor="let duration of tour.durations">
+            {{ duration.transportType }} {{ duration.minutes }} min
+          </span>
         </div>
 
         <div class="tour-tags-section">
@@ -32,7 +40,7 @@
         </div>
 
         <div class="tour-stats">
-          <span>Broj kljucnih tacaka: {{ (tour.keyPoints || []).length }}</span>
+          <span>Prva kljucna tacka: {{ (tour.keyPoints || []).length > 0 ? 'dostupna' : 'nije dostupna' }}</span>
           <span>Broj recenzija: {{ (tour.reviews || []).length }}</span>
         </div>
       </button>
@@ -43,9 +51,15 @@
     <h3>Selected Tour Details</h3>
     <p><strong>{{ selectedTour.name }}</strong></p>
     <p>{{ selectedTour.description }}</p>
-    <p>Difficulty: {{ selectedTour.difficulty }} | Status: {{ selectedTour.status }} | Price: {{ selectedTour.price }}</p>
+    <p>Difficulty: {{ selectedTour.difficulty }} | Status: {{ selectedTour.status }} | Price: {{ selectedTour.price }} | Length: {{ selectedTour.lengthKm || 0 }} km</p>
+    <p *ngIf="(selectedTour.durations || []).length > 0">
+      Durations:
+      <span class="tag-badge" *ngFor="let duration of selectedTour.durations">
+        {{ duration.transportType }} {{ duration.minutes }} min
+      </span>
+    </p>
 
-    <h4>Key Points</h4>
+    <h4>First Key Point</h4>
     <p *ngIf="isLoadingDetails" class="state">Loading details...</p>
     <p *ngIf="!isLoadingDetails && keyPoints.length === 0" class="state">No key points.</p>
     <div *ngIf="keyPoints.length > 0" class="list">

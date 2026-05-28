@@ -43,13 +43,15 @@ export class TouristToursComponent implements OnInit {
   loadTours(): void {
     this.isLoadingTours = true;
     this.errorMessage = '';
-    this.tourApiService.getAllTours().subscribe({
+    this.tourApiService.getPublishedTours().subscribe({
       next: (tours) => {
         this.tours = (tours ?? []).map(tour => ({
           ...tour,
           tags: Array.isArray(tour.tags) ? tour.tags : [],
           keyPoints: Array.isArray(tour.keyPoints) ? tour.keyPoints : [],
-          reviews: Array.isArray(tour.reviews) ? tour.reviews : []
+          reviews: Array.isArray(tour.reviews) ? tour.reviews : [],
+          durations: Array.isArray(tour.durations) ? tour.durations : [],
+          lengthKm: Number(tour.lengthKm ?? 0)
         }));
         this.isLoadingTours = false;
       },
@@ -63,21 +65,15 @@ export class TouristToursComponent implements OnInit {
   selectTour(tourId: string): void {
     this.isLoadingDetails = true;
     this.errorMessage = '';
-    this.tourApiService.getTourById(tourId).subscribe({
-      next: (tour) => {
-        this.selectedTour = {
-          ...tour,
-          tags: Array.isArray(tour.tags) ? tour.tags : [],
-          keyPoints: Array.isArray(tour.keyPoints) ? tour.keyPoints : [],
-          reviews: Array.isArray(tour.reviews) ? tour.reviews : []
-        };
-        this.loadKeyPointsAndReviews(tourId);
-      },
-      error: (error) => {
-        this.errorMessage = error?.error?.error ?? 'Could not load selected tour.';
-        this.isLoadingDetails = false;
-      }
-    });
+    const tour = this.tours.find(item => item.id === tourId) ?? null;
+    if (!tour) {
+      this.errorMessage = 'Could not load selected tour.';
+      this.isLoadingDetails = false;
+      return;
+    }
+    this.selectedTour = tour;
+    this.keyPoints = (tour.keyPoints ?? []).slice(0, 1);
+    this.loadReviews(tourId);
   }
 
   submitReview(): void {
@@ -170,41 +166,36 @@ export class TouristToursComponent implements OnInit {
     this.reviewForm.images = this.reviewForm.images.filter((_, i) => i !== index);
   }
 
-  private loadKeyPointsAndReviews(tourId: string): void {
-    this.tourApiService.getKeyPoints(tourId).subscribe({
-      next: (keyPoints) => {
-        this.keyPoints = keyPoints ?? [];
-        this.tourApiService.getReviews(tourId).subscribe({
-          next: (reviews) => {
-            this.reviews = (reviews ?? []).map(review => ({
-              ...review,
-              images: Array.isArray(review.images) ? review.images : []
-            }));
-            this.isLoadingDetails = false;
-          },
-          error: (error) => {
-            this.errorMessage = error?.error?.error ?? 'Could not load reviews.';
-            this.isLoadingDetails = false;
-          }
-        });
+  private loadReviews(tourId: string): void {
+    this.tourApiService.getReviews(tourId).subscribe({
+      next: (reviews) => {
+        this.reviews = (reviews ?? []).map(review => ({
+          ...review,
+          images: Array.isArray(review.images) ? review.images : []
+        }));
+        this.isLoadingDetails = false;
       },
       error: (error) => {
-        this.errorMessage = error?.error?.error ?? 'Could not load key points.';
+        this.errorMessage = error?.error?.error ?? 'Could not load reviews.';
         this.isLoadingDetails = false;
       }
     });
   }
 
   private refreshSelectedTour(tourId: string): void {
-    this.tourApiService.getTourById(tourId).subscribe({
-      next: (tour) => {
-        this.selectedTour = {
+    this.tourApiService.getPublishedTours().subscribe({
+      next: (tours) => {
+        this.tours = (tours ?? []).map(tour => ({
           ...tour,
           tags: Array.isArray(tour.tags) ? tour.tags : [],
           keyPoints: Array.isArray(tour.keyPoints) ? tour.keyPoints : [],
-          reviews: Array.isArray(tour.reviews) ? tour.reviews : []
-        };
-        this.reviews = this.selectedTour.reviews ?? [];
+          reviews: Array.isArray(tour.reviews) ? tour.reviews : [],
+          durations: Array.isArray(tour.durations) ? tour.durations : [],
+          lengthKm: Number(tour.lengthKm ?? 0)
+        }));
+        this.selectedTour = this.tours.find(tour => tour.id === tourId) ?? this.selectedTour;
+        this.keyPoints = (this.selectedTour?.keyPoints ?? []).slice(0, 1);
+        this.loadReviews(tourId);
       },
       error: () => {}
     });

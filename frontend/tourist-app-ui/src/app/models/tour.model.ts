@@ -8,11 +8,21 @@ export interface Tour {
   difficulty: string;
   tags: string[];
   status: string;
+  publishedAt?: string;
+  archivedAt?: string;
+  reactivatedAt?: string;
+  lengthKm: number;
+  durations: TourDuration[];
   price: number;
   keyPoints: KeyPoint[];
   reviews: Review[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface TourDuration {
+  transportType: 'walking' | 'bicycle' | 'car';
+  minutes: number;
 }
 
 export interface Review {
@@ -48,6 +58,10 @@ export interface UpdateKeyPointRequest {
   latitude: number;
   longitude: number;
   imageUrl: string;
+}
+
+export interface UpdateDurationsRequest {
+  durations: TourDuration[];
 }
 
 export interface CreateReviewRequest {

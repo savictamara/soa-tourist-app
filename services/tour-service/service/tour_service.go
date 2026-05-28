@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
 	"tour-service/models"
 	"tour-service/repository"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -53,6 +55,8 @@ func (s *TourService) CreateTour(ctx context.Context, req models.CreateTourReque
 		Difficulty:  difficulty,
 		Tags:        tags,
 		Status:      "draft",
+		LengthKm:    0,
+		Durations:   []models.TourDuration{},
 		Price:       0,
 		KeyPoints:   []models.KeyPoint{},
 		Reviews:     []models.Review{},
@@ -112,6 +116,10 @@ func (s *TourService) AddKeyPoint(ctx context.Context, tourID primitive.ObjectID
 	if err != nil {
 		return models.KeyPoint{}, err
 	}
+	updatedTour, err = s.repo.UpdateLength(ctx, tourID, calculateLengthKm(updatedTour.KeyPoints), now)
+	if err != nil {
+		return models.KeyPoint{}, err
+	}
 	if len(updatedTour.KeyPoints) == 0 {
 		return models.KeyPoint{}, mongo.ErrNoDocuments
 	}
@@ -141,6 +149,22 @@ func (s *TourService) GetAllTours(ctx context.Context) ([]models.Tour, error) {
 	return tours, nil
 }
 
+func (s *TourService) GetPublishedTours(ctx context.Context) ([]models.Tour, error) {
+	tours, err := s.repo.GetPublished(ctx)
+	if err != nil {
+		return []models.Tour{}, err
+	}
+	if tours == nil {
+		return []models.Tour{}, nil
+	}
+	for i := range tours {
+		if len(tours[i].KeyPoints) > 1 {
+			tours[i].KeyPoints = tours[i].KeyPoints[:1]
+		}
+	}
+	return tours, nil
+}
+
 func (s *TourService) UpdateKeyPoint(ctx context.Context, tourID primitive.ObjectID, keyPointID primitive.ObjectID, req models.UpdateKeyPointRequest) (models.KeyPoint, error) {
 	if strings.TrimSpace(req.Name) == "" || strings.TrimSpace(req.Description) == "" || strings.TrimSpace(req.ImageURL) == "" {
 		return models.KeyPoint{}, ErrInvalidInput
@@ -151,6 +175,10 @@ func (s *TourService) UpdateKeyPoint(ctx context.Context, tourID primitive.Objec
 
 	now := time.Now().UTC()
 	tour, err := s.repo.UpdateKeyPoint(ctx, tourID, keyPointID, req, now)
+	if err != nil {
+		return models.KeyPoint{}, err
+	}
+	tour, err = s.repo.UpdateLength(ctx, tourID, calculateLengthKm(tour.KeyPoints), now)
 	if err != nil {
 		return models.KeyPoint{}, err
 	}
@@ -165,8 +193,98 @@ func (s *TourService) UpdateKeyPoint(ctx context.Context, tourID primitive.Objec
 
 func (s *TourService) DeleteKeyPoint(ctx context.Context, tourID primitive.ObjectID, keyPointID primitive.ObjectID) error {
 	now := time.Now().UTC()
-	_, err := s.repo.DeleteKeyPoint(ctx, tourID, keyPointID, now)
+	tour, err := s.repo.DeleteKeyPoint(ctx, tourID, keyPointID, now)
+	if err != nil {
+		return err
+	}
+	_, err = s.repo.UpdateLength(ctx, tourID, calculateLengthKm(tour.KeyPoints), now)
 	return err
+}
+
+func (s *TourService) UpdateDurations(ctx context.Context, tourID primitive.ObjectID, req models.UpdateDurationsRequest) (models.Tour, error) {
+	durations, err := validateDurations(req.Durations)
+	if err != nil {
+		return models.Tour{}, err
+	}
+	return s.repo.UpdateDurations(ctx, tourID, durations, time.Now().UTC())
+}
+
+func (s *TourService) PublishTour(ctx context.Context, tourID primitive.ObjectID) (models.Tour, error) {
+	tour, err := s.repo.GetByID(ctx, tourID)
+	if err != nil {
+		return models.Tour{}, err
+	}
+	if strings.TrimSpace(tour.Name) == "" {
+		return models.Tour{}, fmt.Errorf("%w: name is required", ErrInvalidInput)
+	}
+	if strings.TrimSpace(tour.Description) == "" {
+		return models.Tour{}, fmt.Errorf("%w: description is required", ErrInvalidInput)
+	}
+	if strings.TrimSpace(tour.Difficulty) == "" {
+		return models.Tour{}, fmt.Errorf("%w: difficulty is required", ErrInvalidInput)
+	}
+	if len(tour.Tags) == 0 {
+		return models.Tour{}, fmt.Errorf("%w: at least one tag is required", ErrInvalidInput)
+	}
+	if len(tour.KeyPoints) < 2 {
+		return models.Tour{}, fmt.Errorf("%w: at least two key points are required", ErrInvalidInput)
+	}
+	durations, err := validateDurations(tour.Durations)
+	if err != nil {
+		return models.Tour{}, err
+	}
+
+	now := time.Now().UTC()
+	update := bson.M{
+		"$set": bson.M{
+			"status":      "published",
+			"publishedAt": now,
+			"durations":   durations,
+			"lengthKm":    calculateLengthKm(tour.KeyPoints),
+			"updatedAt":   now,
+		},
+		"$unset": bson.M{"archivedAt": ""},
+	}
+	return s.repo.UpdateLifecycle(ctx, tourID, update)
+}
+
+func (s *TourService) ArchiveTour(ctx context.Context, tourID primitive.ObjectID) (models.Tour, error) {
+	tour, err := s.repo.GetByID(ctx, tourID)
+	if err != nil {
+		return models.Tour{}, err
+	}
+	if tour.Status != "published" {
+		return models.Tour{}, fmt.Errorf("%w: only published tours can be archived", ErrInvalidInput)
+	}
+	now := time.Now().UTC()
+	update := bson.M{
+		"$set": bson.M{
+			"status":     "archived",
+			"archivedAt": now,
+			"updatedAt":  now,
+		},
+	}
+	return s.repo.UpdateLifecycle(ctx, tourID, update)
+}
+
+func (s *TourService) ReactivateTour(ctx context.Context, tourID primitive.ObjectID) (models.Tour, error) {
+	tour, err := s.repo.GetByID(ctx, tourID)
+	if err != nil {
+		return models.Tour{}, err
+	}
+	if tour.Status != "archived" {
+		return models.Tour{}, fmt.Errorf("%w: only archived tours can be reactivated", ErrInvalidInput)
+	}
+	now := time.Now().UTC()
+	update := bson.M{
+		"$set": bson.M{
+			"status":        "published",
+			"reactivatedAt": now,
+			"updatedAt":     now,
+		},
+		"$unset": bson.M{"archivedAt": ""},
+	}
+	return s.repo.UpdateLifecycle(ctx, tourID, update)
 }
 
 func (s *TourService) AddReview(ctx context.Context, tourID primitive.ObjectID, req models.CreateReviewRequest) (models.Review, error) {
@@ -224,4 +342,63 @@ func (s *TourService) GetReviews(ctx context.Context, tourID primitive.ObjectID)
 		return []models.Review{}, nil
 	}
 	return tour.Reviews, nil
+}
+
+func validateDurations(input []models.TourDuration) ([]models.TourDuration, error) {
+	if len(input) == 0 {
+		return []models.TourDuration{}, fmt.Errorf("%w: at least one duration is required", ErrInvalidInput)
+	}
+	seen := map[string]bool{}
+	durations := make([]models.TourDuration, 0, len(input))
+	for _, duration := range input {
+		transportType := strings.ToLower(strings.TrimSpace(duration.TransportType))
+		if transportType != "walking" && transportType != "bicycle" && transportType != "car" {
+			return []models.TourDuration{}, fmt.Errorf("%w: invalid duration transport type", ErrInvalidInput)
+		}
+		if seen[transportType] {
+			return []models.TourDuration{}, fmt.Errorf("%w: duplicate duration transport type", ErrInvalidInput)
+		}
+		if duration.Minutes <= 0 {
+			return []models.TourDuration{}, fmt.Errorf("%w: duration minutes must be greater than 0", ErrInvalidInput)
+		}
+		seen[transportType] = true
+		durations = append(durations, models.TourDuration{
+			TransportType: transportType,
+			Minutes:       duration.Minutes,
+		})
+	}
+	return durations, nil
+}
+
+func calculateLengthKm(keyPoints []models.KeyPoint) float64 {
+	if len(keyPoints) < 2 {
+		return 0
+	}
+	total := 0.0
+	for i := 1; i < len(keyPoints); i++ {
+		total += haversineKm(
+			keyPoints[i-1].Latitude,
+			keyPoints[i-1].Longitude,
+			keyPoints[i].Latitude,
+			keyPoints[i].Longitude,
+		)
+	}
+	return math.Round(total*100) / 100
+}
+
+func haversineKm(lat1, lon1, lat2, lon2 float64) float64 {
+	const earthRadiusKm = 6371.0
+	dLat := degreesToRadians(lat2 - lat1)
+	dLon := degreesToRadians(lon2 - lon1)
+	rLat1 := degreesToRadians(lat1)
+	rLat2 := degreesToRadians(lat2)
+
+	a := math.Sin(dLat/2)*math.Sin(dLat/2) +
+		math.Cos(rLat1)*math.Cos(rLat2)*math.Sin(dLon/2)*math.Sin(dLon/2)
+	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+	return earthRadiusKm * c
+}
+
+func degreesToRadians(value float64) float64 {
+	return value * math.Pi / 180
 }

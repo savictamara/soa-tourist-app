@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { CreateKeyPointRequest, CreateReviewRequest, Review, CreateTourRequest, Tour, UpdateKeyPointRequest } from '../models/tour.model';
+import { CreateKeyPointRequest, CreateReviewRequest, Review, CreateTourRequest, Tour, UpdateDurationsRequest, UpdateKeyPointRequest } from '../models/tour.model';
 import { KeyPoint } from '../models/key-point.model';
 
 
@@ -30,6 +30,10 @@ export class TourApiService {
     return this.http.get<Tour[]>(this.baseUrl);
   }
 
+  getPublishedTours(): Observable<Tour[]> {
+    return this.http.get<Tour[]>(`${this.baseUrl}/published`);
+  }
+
   getAllTours(): Observable<Tour[]> {
     return this.getTours();
   }
@@ -52,6 +56,22 @@ export class TourApiService {
 
   deleteKeyPoint(tourId: string, keyPointId: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${tourId}/key-points/${keyPointId}`);
+  }
+
+  updateDurations(tourId: string, request: UpdateDurationsRequest): Observable<Tour> {
+    return this.http.put<Tour>(`${this.baseUrl}/${tourId}/durations`, request);
+  }
+
+  publishTour(tourId: string): Observable<Tour> {
+    return this.http.post<Tour>(`${this.baseUrl}/${tourId}/publish`, {});
+  }
+
+  archiveTour(tourId: string): Observable<Tour> {
+    return this.http.post<Tour>(`${this.baseUrl}/${tourId}/archive`, {});
+  }
+
+  reactivateTour(tourId: string): Observable<Tour> {
+    return this.http.post<Tour>(`${this.baseUrl}/${tourId}/reactivate`, {});
   }
 
   addReview(tourId: string, request: CreateReviewRequest): Observable<Review> {
