@@ -15,6 +15,7 @@ import { FollowersComponent } from './followers/followers.component';
 import { PositionSimulatorComponent } from './position-simulator/position-simulator.component';
 import { TouristToursComponent } from './tourist-tours/tourist-tours.component';
 import { TouristGuard } from './guards/tourist.guard';
+import { ShoppingCartComponent } from './shopping-cart/shopping-cart.component';
 
 const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -24,6 +25,7 @@ const routes: Routes = [
   { path: 'blogs', component: BlogCreateComponent, canActivate: [BlogUserGuard] },
   { path: 'tours', component: TourAuthorComponent, canActivate: [TourAuthorGuard] },
   { path: 'tourist-tours', component: TouristToursComponent, canActivate: [TouristGuard] },
+  { path: 'shopping-cart', component: ShoppingCartComponent, canActivate: [TouristGuard] },
   { path: 'position-simulator', component: PositionSimulatorComponent, canActivate: [TouristGuard] },
   { path: 'followers', component: FollowersComponent, canActivate: [AuthGuard] },
   { path: 'users', component: UsersComponent, canActivate: [AdminGuard] }

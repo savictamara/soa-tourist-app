@@ -1,7 +1,10 @@
 import { Component, OnInit } from '@angular/core';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { KeyPoint } from '../models/key-point.model';
 import { CreateReviewRequest, Review, Tour } from '../models/tour.model';
 import { AuthStateService } from '../services/auth-state.service';
+import { PurchaseApiService } from '../services/purchase-api.service';
 import { TourApiService } from '../services/tour-api.service';
 
 @Component({
@@ -17,6 +20,8 @@ export class TouristToursComponent implements OnInit {
   isLoadingTours = false;
   isLoadingDetails = false;
   isSubmittingReview = false;
+  addingToCartTourId: string | null = null;
+  purchasedTourIds = new Set<string>();
   successMessage = '';
   errorMessage = '';
   reviewImageDragActive = false;
@@ -29,11 +34,17 @@ export class TouristToursComponent implements OnInit {
 
   constructor(
     private readonly tourApiService: TourApiService,
+    private readonly purchaseApiService: PurchaseApiService,
     private readonly authStateService: AuthStateService
   ) {}
 
   get todayString(): string {
     return new Date().toISOString().split('T')[0];
+  }
+
+  get touristId(): string {
+    const user = this.authStateService.currentUser;
+    return user?.id ? String(user.id) : user?.username?.trim() ?? '';
   }
 
   ngOnInit(): void {
@@ -53,6 +64,7 @@ export class TouristToursComponent implements OnInit {
           durations: Array.isArray(tour.durations) ? tour.durations : [],
           lengthKm: Number(tour.lengthKm ?? 0)
         }));
+        this.loadPurchaseStatuses();
         this.isLoadingTours = false;
       },
       error: (error) => {
@@ -73,7 +85,52 @@ export class TouristToursComponent implements OnInit {
     }
     this.selectedTour = tour;
     this.keyPoints = (tour.keyPoints ?? []).slice(0, 1);
-    this.loadReviews(tourId);
+    this.purchaseApiService.isPurchased(this.touristId, tourId).pipe(
+      catchError(() => of({ purchased: false }))
+    ).subscribe({
+      next: (status) => {
+        if (status.purchased) {
+          this.purchasedTourIds.add(tourId);
+          this.loadAllKeyPointsAndReviews(tourId);
+        } else {
+          this.loadReviews(tourId);
+        }
+      }
+    });
+  }
+
+  addToCart(tour: Tour, event?: Event): void {
+    event?.stopPropagation();
+    if ((tour.price ?? 0) <= 0) {
+      this.errorMessage = 'Tour price must be set by guide.';
+      this.successMessage = '';
+      return;
+    }
+    if (!this.touristId) {
+      this.errorMessage = 'Logged tourist is required.';
+      return;
+    }
+    this.addingToCartTourId = tour.id;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.purchaseApiService.addItem(this.touristId, {
+      tourId: tour.id,
+      tourName: tour.name,
+      price: tour.price
+    }).subscribe({
+      next: () => {
+        this.successMessage = 'Tour added to shopping cart.';
+        this.addingToCartTourId = null;
+      },
+      error: (error) => {
+        this.errorMessage = error?.error?.error ?? 'Could not add tour to cart.';
+        this.addingToCartTourId = null;
+      }
+    });
+  }
+
+  isPurchased(tourId: string): boolean {
+    return this.purchasedTourIds.has(tourId);
   }
 
   submitReview(): void {
@@ -182,6 +239,19 @@ export class TouristToursComponent implements OnInit {
     });
   }
 
+  private loadAllKeyPointsAndReviews(tourId: string): void {
+    this.tourApiService.getKeyPoints(tourId).subscribe({
+      next: (keyPoints) => {
+        this.keyPoints = keyPoints ?? [];
+        this.loadReviews(tourId);
+      },
+      error: (error) => {
+        this.errorMessage = error?.error?.error ?? 'Could not load key points.';
+        this.isLoadingDetails = false;
+      }
+    });
+  }
+
   private refreshSelectedTour(tourId: string): void {
     this.tourApiService.getPublishedTours().subscribe({
       next: (tours) => {
@@ -193,11 +263,37 @@ export class TouristToursComponent implements OnInit {
           durations: Array.isArray(tour.durations) ? tour.durations : [],
           lengthKm: Number(tour.lengthKm ?? 0)
         }));
+        this.loadPurchaseStatuses();
         this.selectedTour = this.tours.find(tour => tour.id === tourId) ?? this.selectedTour;
-        this.keyPoints = (this.selectedTour?.keyPoints ?? []).slice(0, 1);
-        this.loadReviews(tourId);
+        if (this.purchasedTourIds.has(tourId)) {
+          this.loadAllKeyPointsAndReviews(tourId);
+        } else {
+          this.keyPoints = (this.selectedTour?.keyPoints ?? []).slice(0, 1);
+          this.loadReviews(tourId);
+        }
       },
       error: () => {}
+    });
+  }
+
+  private loadPurchaseStatuses(): void {
+    if (!this.touristId || this.tours.length === 0) {
+      this.purchasedTourIds = new Set<string>();
+      return;
+    }
+    const checks = this.tours.map(tour =>
+      this.purchaseApiService.isPurchased(this.touristId, tour.id).pipe(
+        catchError(() => of({ purchased: false }))
+      )
+    );
+    forkJoin(checks).subscribe(statuses => {
+      const purchased = new Set<string>();
+      statuses.forEach((status, index) => {
+        if (status.purchased) {
+          purchased.add(this.tours[index].id);
+        }
+      });
+      this.purchasedTourIds = purchased;
     });
   }
 

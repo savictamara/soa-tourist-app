@@ -93,6 +93,27 @@
           <span *ngIf="tour.archivedAt">Archived: {{ tour.archivedAt | date:'short' }}</span>
         </div>
 
+        <div class="price-editor">
+          <label [for]="'tourPrice-' + tour.id">Tour price</label>
+          <div class="price-editor-row">
+            <input
+              [id]="'tourPrice-' + tour.id"
+              type="number"
+              min="0"
+              step="0.01"
+              [name]="'tourPrice-' + tour.id"
+              [(ngModel)]="priceInputs[tour.id]"
+              [disabled]="tour.status === 'archived'">
+            <button
+              type="button"
+              class="secondary-button compact-button"
+              (click)="savePrice(tour)"
+              [disabled]="tour.status === 'archived' || isSavingPriceTourId === tour.id">
+              {{ isSavingPriceTourId === tour.id ? 'Saving...' : 'Save Price' }}
+            </button>
+          </div>
+        </div>
+
         <div class="durations-row" *ngIf="(tour.durations || []).length > 0">
           <span class="duration-chip" *ngFor="let duration of tour.durations">
             {{ duration.transportType }} {{ duration.minutes }} min

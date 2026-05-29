@@ -40,6 +40,8 @@ h2, h3, h4 {
   box-shadow: 0 8px 20px rgba(214, 102, 148, 0.08);
   cursor: pointer;
   transition: all 0.2s ease;
+  display: block;
+  position: relative;
 }
 
 .tour-item:hover {
@@ -138,6 +140,20 @@ button {
   color: #fff;
   font-weight: 700;
   cursor: pointer;
+}
+
+.add-cart-button {
+  margin-top: 16px;
+}
+
+.purchased-badge {
+  display: inline-block;
+  border-radius: 999px;
+  background: #d4f5e4;
+  color: #2e7d5a;
+  font-weight: 700;
+  padding: 6px 12px;
+  margin-bottom: 12px;
 }
 
 .secondary-button {

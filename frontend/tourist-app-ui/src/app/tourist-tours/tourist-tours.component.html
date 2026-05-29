@@ -7,8 +7,9 @@
     <p *ngIf="isLoadingTours" class="state">Loading tours...</p>
     <p *ngIf="!isLoadingTours && tours.length === 0" class="state">No tours available.</p>
     <div class="tour-items" *ngIf="tours.length > 0">
-      <button class="tour-item" type="button" *ngFor="let tour of tours" (click)="selectTour(tour.id)">
+      <article class="tour-item" *ngFor="let tour of tours" (click)="selectTour(tour.id)">
         <h4 class="tour-title">{{ tour.name }}</h4>
+        <span *ngIf="isPurchased(tour.id)" class="purchased-badge">Purchased</span>
 
         <div class="tour-description-block">
           <p class="section-label">Opis:</p>
@@ -43,7 +44,16 @@
           <span>Prva kljucna tacka: {{ (tour.keyPoints || []).length > 0 ? 'dostupna' : 'nije dostupna' }}</span>
           <span>Broj recenzija: {{ (tour.reviews || []).length }}</span>
         </div>
-      </button>
+
+        <button
+          *ngIf="!isPurchased(tour.id)"
+          type="button"
+          class="add-cart-button"
+          (click)="addToCart(tour, $event)"
+          [disabled]="addingToCartTourId === tour.id || (tour.price || 0) <= 0">
+          {{ (tour.price || 0) <= 0 ? 'Tour price must be set by guide' : (addingToCartTourId === tour.id ? 'Adding...' : 'Add To Cart') }}
+        </button>
+      </article>
     </div>
   </div>
 
@@ -59,7 +69,7 @@
       </span>
     </p>
 
-    <h4>First Key Point</h4>
+    <h4>{{ isPurchased(selectedTour.id) ? 'Key Points' : 'First Key Point' }}</h4>
     <p *ngIf="isLoadingDetails" class="state">Loading details...</p>
     <p *ngIf="!isLoadingDetails && keyPoints.length === 0" class="state">No key points.</p>
     <div *ngIf="keyPoints.length > 0" class="list">

@@ -15,6 +15,7 @@ import { TourAuthorComponent } from './tour-author/tour-author.component';
 import { FollowersComponent } from './followers/followers.component';
 import { PositionSimulatorComponent } from './position-simulator/position-simulator.component';
 import { TouristToursComponent } from './tourist-tours/tourist-tours.component';
+import { ShoppingCartComponent } from './shopping-cart/shopping-cart.component';
 
 @NgModule({
   declarations: [
@@ -27,7 +28,8 @@ import { TouristToursComponent } from './tourist-tours/tourist-tours.component';
     TourAuthorComponent,
     FollowersComponent,
     PositionSimulatorComponent,
-    TouristToursComponent
+    TouristToursComponent,
+    ShoppingCartComponent
   ],
   imports: [
     BrowserModule,
