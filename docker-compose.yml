@@ -52,6 +52,17 @@ services:
     networks:
       - database
 
+  purchase-mongo:
+    image: mongo:7
+    container_name: purchase-mongo
+    restart: always
+    ports:
+      - "27018:27017"
+    volumes:
+      - purchase-mongo-data:/data/db
+    networks:
+      - database
+
   follower-neo4j:
     image: neo4j:5
     container_name: follower-neo4j
@@ -116,6 +127,22 @@ services:
       - application
       - database
 
+  purchase-service:
+    build:
+      context: .
+      dockerfile: services/purchase-service/Dockerfile
+    container_name: purchase-service
+    restart: on-failure
+    environment:
+      MONGO_URI: mongodb://purchase-mongo:27017
+      TOUR_SERVICE_URL: http://tour-service:8085
+    depends_on:
+      - purchase-mongo
+      - tour-service
+    networks:
+      - application
+      - database
+
   follower-service:
     build: ./services/follower-service
     container_name: follower-service
@@ -140,6 +167,7 @@ services:
       - stakeholders-service
       - blog-service
       - tour-service
+      - purchase-service
       - follower-service
     networks:
       - application
@@ -160,6 +188,7 @@ volumes:
   stakeholders-db-data:
   blog-db-data:
   tour-mongo-data:
+  purchase-mongo-data:
   follower-neo4j-data:
 
 networks:

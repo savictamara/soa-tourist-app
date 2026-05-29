@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { CreateKeyPointRequest, CreateReviewRequest, Review, CreateTourRequest, Tour, UpdateDurationsRequest, UpdateKeyPointRequest } from '../models/tour.model';
+import { CreateKeyPointRequest, CreateReviewRequest, Review, CreateTourRequest, Tour, UpdateDurationsRequest, UpdateKeyPointRequest, UpdatePriceRequest } from '../models/tour.model';
 import { KeyPoint } from '../models/key-point.model';
 
 
@@ -60,6 +60,10 @@ export class TourApiService {
 
   updateDurations(tourId: string, request: UpdateDurationsRequest): Observable<Tour> {
     return this.http.put<Tour>(`${this.baseUrl}/${tourId}/durations`, request);
+  }
+
+  updatePrice(tourId: string, request: UpdatePriceRequest): Observable<Tour> {
+    return this.http.put<Tour>(`${this.baseUrl}/${tourId}/price`, request);
   }
 
   publishTour(tourId: string): Observable<Tour> {

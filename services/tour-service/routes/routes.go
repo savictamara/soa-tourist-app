@@ -16,6 +16,7 @@ func RegisterRoutes(router *gin.Engine, handler *handlers.TourHandler) {
 		api.GET("/author/:authorId", handler.GetToursByAuthor)
 		api.GET("/:tourId", handler.GetTour)
 		api.PUT("/:tourId/durations", handler.UpdateDurations)
+		api.PUT("/:tourId/price", handler.UpdatePrice)
 		api.POST("/:tourId/publish", handler.PublishTour)
 		api.POST("/:tourId/archive", handler.ArchiveTour)
 		api.POST("/:tourId/reactivate", handler.ReactivateTour)

@@ -209,6 +209,13 @@ func (s *TourService) UpdateDurations(ctx context.Context, tourID primitive.Obje
 	return s.repo.UpdateDurations(ctx, tourID, durations, time.Now().UTC())
 }
 
+func (s *TourService) UpdatePrice(ctx context.Context, tourID primitive.ObjectID, req models.UpdatePriceRequest) (models.Tour, error) {
+	if req.Price < 0 {
+		return models.Tour{}, fmt.Errorf("%w: price must be greater than or equal to 0", ErrInvalidInput)
+	}
+	return s.repo.UpdatePrice(ctx, tourID, req.Price, time.Now().UTC())
+}
+
 func (s *TourService) PublishTour(ctx context.Context, tourID primitive.ObjectID) (models.Tour, error) {
 	tour, err := s.repo.GetByID(ctx, tourID)
 	if err != nil {
@@ -225,6 +232,9 @@ func (s *TourService) PublishTour(ctx context.Context, tourID primitive.ObjectID
 	}
 	if len(tour.Tags) == 0 {
 		return models.Tour{}, fmt.Errorf("%w: at least one tag is required", ErrInvalidInput)
+	}
+	if tour.Price <= 0 {
+		return models.Tour{}, fmt.Errorf("%w: price must be greater than 0 before publishing", ErrInvalidInput)
 	}
 	if len(tour.KeyPoints) < 2 {
 		return models.Tour{}, fmt.Errorf("%w: at least two key points are required", ErrInvalidInput)

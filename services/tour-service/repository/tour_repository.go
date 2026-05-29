@@ -216,6 +216,23 @@ func (r *TourRepository) UpdateDurations(ctx context.Context, tourID primitive.O
 	return r.GetByID(ctx, tourID)
 }
 
+func (r *TourRepository) UpdatePrice(ctx context.Context, tourID primitive.ObjectID, price float64, updatedAt time.Time) (models.Tour, error) {
+	update := bson.M{
+		"$set": bson.M{
+			"price":     price,
+			"updatedAt": updatedAt,
+		},
+	}
+	res, err := r.collection.UpdateOne(ctx, bson.M{"_id": tourID}, update)
+	if err != nil {
+		return models.Tour{}, err
+	}
+	if res.MatchedCount == 0 {
+		return models.Tour{}, mongo.ErrNoDocuments
+	}
+	return r.GetByID(ctx, tourID)
+}
+
 func (r *TourRepository) UpdateLifecycle(ctx context.Context, tourID primitive.ObjectID, update bson.M) (models.Tour, error) {
 	res, err := r.collection.UpdateOne(ctx, bson.M{"_id": tourID}, update)
 	if err != nil {

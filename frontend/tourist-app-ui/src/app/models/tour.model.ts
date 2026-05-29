@@ -64,6 +64,10 @@ export interface UpdateDurationsRequest {
   durations: TourDuration[];
 }
 
+export interface UpdatePriceRequest {
+  price: number;
+}
+
 export interface CreateReviewRequest {
   rating: number;
   comment: string;

@@ -44,12 +44,14 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
   selectedTourId = '';
   selectedTour: Tour | null = null;
   selectedTourKeyPoints: KeyPoint[] = [];
+  priceInputs: Record<string, number> = {};
   tags: string[] = [];
   isCreatingTour = false;
   isAddingKeyPoint = false;
   isUpdatingKeyPoint = false;
   isDeletingKeyPointId: string | null = null;
   isSavingDurations = false;
+  isSavingPriceTourId: string | null = null;
   lifecycleActionTourId: string | null = null;
   isLoadingTours = false;
   isLoadingKeyPoints = false;
@@ -184,6 +186,7 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.tourApiService.getToursByAuthor(authorId).subscribe({
       next: (tours) => {
         this.tours = (tours ?? []).map(tour => this.normalizeTour(tour));
+        this.syncPriceInputs();
         if (this.tours.length > 0) {
           const tourToSelect = preferredTourId && this.tours.some(t => t.id === preferredTourId)
             ? preferredTourId
@@ -209,6 +212,7 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.tourApiService.getTours().subscribe({
       next: (tours) => {
         this.tours = (tours ?? []).map(tour => this.normalizeTour(tour));
+        this.syncPriceInputs();
         if (this.tours.length > 0) {
           const tourToSelect = preferredTourId && this.tours.some(t => t.id === preferredTourId)
             ? preferredTourId
@@ -421,6 +425,29 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  savePrice(tour: Tour): void {
+    const price = Number(this.priceInputs[tour.id] ?? 0);
+    if (Number.isNaN(price) || price < 0) {
+      this.errorMessage = 'Price must be greater than or equal to 0.';
+      this.successMessage = '';
+      return;
+    }
+    this.isSavingPriceTourId = tour.id;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.tourApiService.updatePrice(tour.id, { price }).subscribe({
+      next: (updatedTour) => {
+        this.upsertTour(updatedTour);
+        this.successMessage = 'Price saved.';
+        this.isSavingPriceTourId = null;
+      },
+      error: (error) => {
+        this.errorMessage = error.error?.error ?? 'Could not save price.';
+        this.isSavingPriceTourId = null;
+      }
+    });
+  }
+
   publishTour(tour: Tour): void {
     this.runLifecycleAction(tour.id, () => this.tourApiService.publishTour(tour.id), 'Tour published.');
   }
@@ -576,7 +603,8 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
       keyPoints: Array.isArray(tour.keyPoints) ? tour.keyPoints : [],
       reviews: Array.isArray(tour.reviews) ? tour.reviews : [],
       durations: Array.isArray(tour.durations) ? tour.durations : [],
-      lengthKm: Number(tour.lengthKm ?? 0)
+      lengthKm: Number(tour.lengthKm ?? 0),
+      price: Number(tour.price ?? 0)
     };
   }
 
@@ -593,11 +621,18 @@ export class TourAuthorComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.tours.some(existing => existing.id === normalized.id)) {
       this.tours = [normalized, ...this.tours];
     }
+    this.priceInputs[normalized.id] = normalized.price;
     if (this.selectedTourId === normalized.id) {
       this.selectedTour = normalized;
       this.selectedTourKeyPoints = normalized.keyPoints ?? this.selectedTourKeyPoints;
       this.renderTourOnMap();
     }
+  }
+
+  private syncPriceInputs(): void {
+    this.tours.forEach(tour => {
+      this.priceInputs[tour.id] = tour.price;
+    });
   }
 
   private runLifecycleAction(tourId: string, action: () => any, successMessage: string): void {

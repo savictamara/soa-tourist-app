@@ -130,6 +130,35 @@ func (h *TourHandler) UpdateDurations(c *gin.Context) {
 	c.JSON(http.StatusOK, tour)
 }
 
+func (h *TourHandler) UpdatePrice(c *gin.Context) {
+	tourID, ok := parseObjectID(c, "tourId")
+	if !ok {
+		return
+	}
+
+	var req models.UpdatePriceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+		return
+	}
+
+	tour, err := h.tourService.UpdatePrice(c.Request.Context(), tourID, req)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidInput) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": validationMessage(err)})
+			return
+		}
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "tour not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update price"})
+		return
+	}
+
+	c.JSON(http.StatusOK, tour)
+}
+
 func (h *TourHandler) PublishTour(c *gin.Context) {
 	tourID, ok := parseObjectID(c, "tourId")
 	if !ok {

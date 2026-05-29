@@ -221,6 +221,18 @@ em {
   padding: 0.9rem;
 }
 
+.price-editor {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.price-editor-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .duration-form {
   display: grid;
   grid-template-columns: minmax(130px, 1fr) minmax(120px, 1fr) auto auto;
@@ -529,6 +541,7 @@ button:disabled {
 }
 
 @media (max-width: 760px) {
+  .price-editor-row,
   .duration-form {
     grid-template-columns: 1fr;
   }

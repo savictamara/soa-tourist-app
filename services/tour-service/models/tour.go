@@ -82,6 +82,10 @@ type UpdateDurationsRequest struct {
 	Durations []TourDuration `json:"durations"`
 }
 
+type UpdatePriceRequest struct {
+	Price float64 `json:"price"`
+}
+
 type CreateReviewRequest struct {
 	Rating          int      `json:"rating"`
 	Comment         string   `json:"comment"`
