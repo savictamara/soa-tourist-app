@@ -1,0 +1,158 @@
+{
+  "title": "Service Logs",
+  "uid": "service-logs",
+  "schemaVersion": 38,
+  "version": 1,
+  "panels": [
+    {
+      "id": 1,
+      "title": "All Service Logs",
+      "type": "logs",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 0 },
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "{container=~\".+\"}",
+          "refId": "A"
+        }
+      ],
+      "datasource": { "type": "loki", "uid": "loki-uid" }
+    },
+    {
+      "id": 2,
+      "title": "Stakeholders Service Logs",
+      "type": "logs",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "{container=\"/stakeholders-service\"}",
+          "refId": "A"
+        }
+      ],
+      "datasource": { "type": "loki", "uid": "loki-uid" }
+    },
+    {
+      "id": 3,
+      "title": "Purchase Service Logs",
+      "type": "logs",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "{container=\"/purchase-service\"}",
+          "refId": "A"
+        }
+      ],
+      "datasource": { "type": "loki", "uid": "loki-uid" }
+    },
+    {
+      "id": 4,
+      "title": "Tour Service Logs",
+      "type": "logs",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "{container=\"/tour-service\"}",
+          "refId": "A"
+        }
+      ],
+      "datasource": { "type": "loki", "uid": "loki-uid" }
+    },
+    {
+      "id": 5,
+      "title": "Gateway RPC Adapter Logs",
+      "type": "logs",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "{container=\"/gateway-rpc-adapter\"}",
+          "refId": "A"
+        }
+      ],
+      "datasource": { "type": "loki", "uid": "loki-uid" }
+    },
+    {
+      "id": 6,
+      "title": "Blog Service Logs",
+      "type": "logs",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "{container=\"/blog-service\"}",
+          "refId": "A"
+        }
+      ],
+      "datasource": { "type": "loki", "uid": "loki-uid" }
+    },
+    {
+      "id": 7,
+      "title": "Follower Service Logs",
+      "type": "logs",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "{container=\"/follower-service\"}",
+          "refId": "A"
+        }
+      ],
+      "datasource": { "type": "loki", "uid": "loki-uid" }
+    }
+  ]
+}

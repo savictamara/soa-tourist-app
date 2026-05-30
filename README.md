@@ -38,6 +38,17 @@ Browser → localhost:8080 (API Gateway)
 
 Backend services have no exposed host ports — accessible only within the Docker network via the gateway.
 
+## Monitoring
+
+| Alat | URL | Opis |
+|---|---|---|
+| Grafana | http://localhost:3000 | Dashboardi za metrike i logove (admin/admin) |
+| Grafana — Host Metrics | http://localhost:3000/d/host-metrics | CPU, RAM, Disk, Network hosta |
+| Grafana — Container Metrics | http://localhost:3000/d/container-metrics | Metrike po kontejneru |
+| Grafana — Service Logs | http://localhost:3000/d/service-logs | Logovi svih servisa |
+| Prometheus | http://localhost:9090 | Sirove metrike i targeti |
+| Jaeger | http://localhost:16686 | Distributed tracing (gateway-rpc-adapter) |
+
 ## Docker Compose run
 
 Start everything:

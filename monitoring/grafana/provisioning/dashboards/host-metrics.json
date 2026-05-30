@@ -1,0 +1,98 @@
+{
+  "title": "Host Metrics",
+  "uid": "host-metrics",
+  "schemaVersion": 38,
+  "version": 1,
+  "panels": [
+    {
+      "id": 1,
+      "title": "CPU Usage %",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": { "unit": "percent", "min": 0, "max": 100 }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "PBFA97CFB590B2093", "uid": "PBFA97CFB590B2093" },
+          "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[1m])) * 100)",
+          "legendFormat": "CPU Usage",
+          "refId": "A"
+        }
+      ],
+      "datasource": { "type": "PBFA97CFB590B2093", "uid": "PBFA97CFB590B2093" }
+    },
+    {
+      "id": 2,
+      "title": "RAM Usage",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "fieldConfig": {
+        "defaults": { "unit": "bytes" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "PBFA97CFB590B2093", "uid": "PBFA97CFB590B2093" },
+          "expr": "node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes",
+          "legendFormat": "Used RAM",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "PBFA97CFB590B2093", "uid": "PBFA97CFB590B2093" },
+          "expr": "node_memory_MemTotal_bytes",
+          "legendFormat": "Total RAM",
+          "refId": "B"
+        }
+      ],
+      "datasource": { "type": "PBFA97CFB590B2093", "uid": "PBFA97CFB590B2093" }
+    },
+    {
+      "id": 3,
+      "title": "Filesystem Usage",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "fieldConfig": {
+        "defaults": { "unit": "bytes" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "PBFA97CFB590B2093", "uid": "PBFA97CFB590B2093" },
+          "expr": "sum(node_filesystem_size_bytes{fstype=\"tmpfs\"} - node_filesystem_free_bytes{fstype=\"tmpfs\"})",
+          "legendFormat": "Disk Used",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "PBFA97CFB590B2093", "uid": "PBFA97CFB590B2093" },
+          "expr": "sum(node_filesystem_size_bytes{fstype=\"tmpfs\"})",
+          "legendFormat": "Disk Total",
+          "refId": "B"
+        }
+      ],
+      "datasource": { "type": "PBFA97CFB590B2093", "uid": "PBFA97CFB590B2093" }
+    },
+    {
+      "id": 4,
+      "title": "Network Traffic",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "fieldConfig": {
+        "defaults": { "unit": "Bps" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "PBFA97CFB590B2093", "uid": "PBFA97CFB590B2093" },
+          "expr": "rate(node_network_receive_bytes_total{device!=\"lo\"}[1m])",
+          "legendFormat": "Receive {{device}}",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "PBFA97CFB590B2093", "uid": "PBFA97CFB590B2093" },
+          "expr": "rate(node_network_transmit_bytes_total{device!=\"lo\"}[1m])",
+          "legendFormat": "Transmit {{device}}",
+          "refId": "B"
+        }
+      ],
+      "datasource": { "type": "PBFA97CFB590B2093", "uid": "PBFA97CFB590B2093" }
+    }
+  ]
+}
