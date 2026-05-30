@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package purchasegateway;
+
+service PurchaseGatewayRpc {
+  rpc AddToCart(AddToCartRequest) returns (ShoppingCartResponse);
+  rpc Checkout(CheckoutRequest) returns (CheckoutResponse);
+}
+
+message AddToCartRequest {
+  string touristId = 1;
+  string tourId = 2;
+  string tourName = 3;
+  double price = 4;
+}
+
+message CheckoutRequest {
+  string touristId = 1;
+}
+
+message OrderItemMessage {
+  string tourId = 1;
+  string tourName = 2;
+  double price = 3;
+}
+
+message ShoppingCartMessage {
+  string touristId = 1;
+  repeated OrderItemMessage items = 2;
+  double totalPrice = 3;
+}
+
+message PurchaseTokenMessage {
+  string touristId = 1;
+  string tourId = 2;
+  string purchasedAt = 3;
+  string token = 4;
+}
+
+message ShoppingCartResponse {
+  bool success = 1;
+  string message = 2;
+  ShoppingCartMessage cart = 3;
+}
+
+message CheckoutResponse {
+  bool success = 1;
+  string message = 2;
+  repeated PurchaseTokenMessage tokens = 3;
+}

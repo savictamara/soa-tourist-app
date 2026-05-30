@@ -145,6 +145,21 @@ services:
       - application
       - database
 
+  gateway-rpc-adapter:
+    build:
+      context: .
+      dockerfile: services/gateway-rpc-adapter/Dockerfile
+    container_name: gateway-rpc-adapter
+    restart: on-failure
+    environment:
+      PURCHASE_GRPC_ADDR: purchase-service:9093
+      FOLLOWER_GRPC_ADDR: follower-service:9092
+    depends_on:
+      - purchase-service
+      - follower-service
+    networks:
+      - application
+
   follower-service:
     build: ./services/follower-service
     container_name: follower-service
@@ -171,6 +186,7 @@ services:
       - tour-service
       - purchase-service
       - follower-service
+      - gateway-rpc-adapter
     networks:
       - application
 

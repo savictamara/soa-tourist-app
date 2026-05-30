@@ -5,6 +5,9 @@ package followerrpc;
 service FollowerRpc {
   rpc CanComment(CanCommentRequest) returns (CanCommentResponse);
   rpc GetFollowedAuthors(GetFollowedAuthorsRequest) returns (GetFollowedAuthorsResponse);
+  rpc FollowUser(FollowUserRequest) returns (FollowResponse);
+  rpc UnfollowUser(UnfollowUserRequest) returns (UnfollowResponse);
+  rpc GetRecommendations(GetRecommendationsRequest) returns (RecommendationsResponse);
 }
 
 message CanCommentRequest {
@@ -22,4 +25,42 @@ message GetFollowedAuthorsRequest {
 
 message GetFollowedAuthorsResponse {
   repeated int64 authorIds = 1;
+}
+
+message FollowUserRequest {
+  string followerId = 1;
+  string followingId = 2;
+  string followerUsername = 3;
+  string followingUsername = 4;
+  string followerRole = 5;
+  string followingRole = 6;
+}
+
+message FollowResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message UnfollowUserRequest {
+  string followerId = 1;
+  string followingId = 2;
+}
+
+message UnfollowResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message GetRecommendationsRequest {
+  string userId = 1;
+}
+
+message UserMessage {
+  string userId = 1;
+  string username = 2;
+  string role = 3;
+}
+
+message RecommendationsResponse {
+  repeated UserMessage recommendations = 1;
 }

@@ -3,28 +3,9 @@ syntax = "proto3";
 package followerrpc;
 
 service FollowerRpc {
-  rpc CanComment(CanCommentRequest) returns (CanCommentResponse);
-  rpc GetFollowedAuthors(GetFollowedAuthorsRequest) returns (GetFollowedAuthorsResponse);
   rpc FollowUser(FollowUserRequest) returns (FollowResponse);
   rpc UnfollowUser(UnfollowUserRequest) returns (UnfollowResponse);
   rpc GetRecommendations(GetRecommendationsRequest) returns (RecommendationsResponse);
-}
-
-message CanCommentRequest {
-  int64 commenterId = 1;
-  int64 authorId = 2;
-}
-
-message CanCommentResponse {
-  bool allowed = 1;
-}
-
-message GetFollowedAuthorsRequest {
-  int64 userId = 1;
-}
-
-message GetFollowedAuthorsResponse {
-  repeated int64 authorIds = 1;
 }
 
 message FollowUserRequest {

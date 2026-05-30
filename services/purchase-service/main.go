@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"purchase-service/config"
+	"purchase-service/gatewayrpc"
 	"purchase-service/handlers"
 	"purchase-service/repository"
 	"purchase-service/routes"
@@ -48,6 +49,8 @@ func main() {
 	defer tourRPCClient.Close()
 
 	purchaseService := service.NewPurchaseService(repo, tourRPCClient)
+	go gatewayrpc.StartServer(":9093", purchaseService)
+
 	purchaseHandler := handlers.NewPurchaseHandler(purchaseService)
 	routes.RegisterRoutes(router, purchaseHandler)
 
