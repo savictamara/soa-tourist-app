@@ -13,6 +13,6 @@ FROM alpine:3.20
 WORKDIR /app
 COPY --from=builder /app/purchase-service ./purchase-service
 
-EXPOSE 8087
+EXPOSE 8087 9093
 
 CMD ["./purchase-service"]
