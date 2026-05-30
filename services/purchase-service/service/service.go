@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -99,6 +100,7 @@ func (s *PurchaseService) RemoveItem(ctx context.Context, touristID string, tour
 }
 
 func (s *PurchaseService) Checkout(ctx context.Context, touristID string) ([]models.TourPurchaseToken, error) {
+	// SAGA T1: load cart
 	cart, err := s.GetCart(ctx, touristID)
 	if err != nil {
 		return []models.TourPurchaseToken{}, err
@@ -107,21 +109,45 @@ func (s *PurchaseService) Checkout(ctx context.Context, touristID string) ([]mod
 		return []models.TourPurchaseToken{}, fmt.Errorf("%w: cart is empty", ErrInvalidInput)
 	}
 
+	// SAGA T2: validate each tour via Tour Service RPC
+	// Compensation C2: remove invalid items from cart so tourist can retry with valid ones
+	validItems := make([]models.OrderItem, 0, len(cart.Items))
+	invalidItems := make([]string, 0)
 	for _, item := range cart.Items {
 		valid, message, err := s.tourRPC.ValidateTourPurchase(ctx, item.TourID)
 		if err != nil {
 			return []models.TourPurchaseToken{}, err
 		}
 		if !valid {
-			return []models.TourPurchaseToken{}, fmt.Errorf("%w: tour %s is no longer purchasable: %s", ErrInvalidInput, item.TourName, message)
+			log.Printf("Checkout SAGA T2 tour no longer purchasable tourId=%s tourName=%s reason=%s — compensation C2: removing from cart", item.TourID, item.TourName, message)
+			invalidItems = append(invalidItems, item.TourName)
+		} else {
+			validItems = append(validItems, item)
 		}
 	}
 
+	// execute compensation C2: persist removal of invalid items
+	if len(invalidItems) > 0 {
+		cart.Items = validItems
+		if _, err = s.repo.SaveCart(ctx, cart); err != nil {
+			return []models.TourPurchaseToken{}, err
+		}
+		if len(validItems) == 0 {
+			return []models.TourPurchaseToken{}, fmt.Errorf("%w: no purchasable tours in cart, removed: %s", ErrInvalidInput, strings.Join(invalidItems, ", "))
+		}
+		log.Printf("Checkout SAGA compensation C2 complete: removed %d invalid tours, continuing with %d valid", len(invalidItems), len(validItems))
+	}
+
+	// SAGA T3: create purchase tokens for each valid item
+	// Compensation C3: if token creation fails, delete all tokens created so far in this checkout
 	now := time.Now().UTC()
-	created := make([]models.TourPurchaseToken, 0, len(cart.Items))
-	for _, item := range cart.Items {
+	createdTokenIDs := make([]primitive.ObjectID, 0, len(validItems))
+	created := make([]models.TourPurchaseToken, 0, len(validItems))
+
+	for _, item := range validItems {
 		owned, err := s.repo.HasToken(ctx, touristID, item.TourID)
 		if err != nil {
+			s.compensateTokens(ctx, createdTokenIDs)
 			return []models.TourPurchaseToken{}, err
 		}
 		if owned {
@@ -129,6 +155,7 @@ func (s *PurchaseService) Checkout(ctx context.Context, touristID string) ([]mod
 		}
 		tokenValue, err := generateToken()
 		if err != nil {
+			s.compensateTokens(ctx, createdTokenIDs)
 			return []models.TourPurchaseToken{}, err
 		}
 		token := models.TourPurchaseToken{
@@ -139,16 +166,34 @@ func (s *PurchaseService) Checkout(ctx context.Context, touristID string) ([]mod
 			Token:       tokenValue,
 		}
 		if err = s.repo.CreateToken(ctx, token); err != nil {
+			s.compensateTokens(ctx, createdTokenIDs)
 			return []models.TourPurchaseToken{}, err
 		}
+		createdTokenIDs = append(createdTokenIDs, token.ID)
 		created = append(created, token)
 	}
 
+	// SAGA T4: clear cart
+	// Compensation C4: if cart clearing fails, delete all created tokens
 	cart.Items = []models.OrderItem{}
 	if _, err = s.repo.SaveCart(ctx, cart); err != nil {
+		log.Printf("Checkout SAGA T4 failed touristId=%s — executing compensation C4: deleting %d tokens", touristID, len(createdTokenIDs))
+		s.compensateTokens(ctx, createdTokenIDs)
 		return []models.TourPurchaseToken{}, err
 	}
+
+	log.Printf("Checkout SAGA completed touristId=%s tokens=%d", touristID, len(created))
 	return created, nil
+}
+
+func (s *PurchaseService) compensateTokens(ctx context.Context, ids []primitive.ObjectID) {
+	if len(ids) == 0 {
+		return
+	}
+	log.Printf("Checkout SAGA compensation C3/C4: deleting %d tokens", len(ids))
+	if err := s.repo.DeleteTokensBatch(ctx, ids); err != nil {
+		log.Printf("Checkout SAGA compensation failed to delete tokens: %v", err)
+	}
 }
 
 func (s *PurchaseService) GetTokens(ctx context.Context, touristID string) ([]models.TourPurchaseToken, error) {
