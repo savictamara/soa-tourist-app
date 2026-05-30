@@ -41,10 +41,13 @@ func main() {
 	}))
 
 	tourRepository := repository.NewTourRepository(mongoCfg.Collection)
+	executionRepository := repository.NewTourExecutionRepository(mongoCfg.ExecutionsCollection)
 	tourService := service.NewTourService(tourRepository)
+	executionService := service.NewTourExecutionService(tourRepository, executionRepository, service.NewPurchaseClient())
 	tourHandler := handlers.NewTourHandler(tourService)
+	executionHandler := handlers.NewTourExecutionHandler(executionService)
 
-	routes.RegisterRoutes(router, tourHandler)
+	routes.RegisterRoutes(router, tourHandler, executionHandler)
 
 	go rpc.StartGRPCServer(":9091", tourService)
 

@@ -101,6 +101,15 @@ func (h *TourHandler) GetPublishedTours(c *gin.Context) {
 	c.JSON(http.StatusOK, tours)
 }
 
+func (h *TourHandler) GetAvailableTours(c *gin.Context) {
+	tours, err := h.tourService.GetAvailableToursForTourists(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch available tours"})
+		return
+	}
+	c.JSON(http.StatusOK, tours)
+}
+
 func (h *TourHandler) UpdateDurations(c *gin.Context) {
 	tourID, ok := parseObjectID(c, "tourId")
 	if !ok {
