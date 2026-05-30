@@ -86,6 +86,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: Host=stakeholders-db;Port=5432;Database=stakeholders_db;Username=postgres;Password=postgres
+      Services__FollowerUrl: http://follower-service:8086/
     depends_on:
       stakeholders-db:
         condition: service_healthy

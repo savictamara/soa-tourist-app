@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -172,6 +173,49 @@ func main() {
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{"message": response.Message})
+	})
+
+	router.GET("/api/followers/:userId/followed-authors", func(c *gin.Context) {
+		userIDStr := c.Param("userId")
+		var userID int64
+		if _, err := fmt.Sscanf(userIDStr, "%d", &userID); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid userId"})
+			return
+		}
+		request := rpc.GetFollowedAuthorsRequest{UserID: userID}
+		log.Printf("Gateway RPC adapter received GetFollowedAuthors HTTP request userId=%s", userIDStr)
+		response, err := followerClient.GetFollowedAuthors(c.Request.Context(), &request)
+		if err != nil {
+			log.Printf("Gateway RPC adapter GetFollowedAuthors gRPC failed userId=%s error=%v", userIDStr, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch followed authors"})
+			return
+		}
+		log.Printf("Gateway RPC adapter called Follower gRPC GetFollowedAuthors userId=%s count=%d", userIDStr, len(response.AuthorIDs))
+		c.JSON(http.StatusOK, gin.H{"authorIds": response.AuthorIDs})
+	})
+
+	router.GET("/api/followers/:userId/can-comment/:authorId", func(c *gin.Context) {
+		commenterIDStr := c.Param("userId")
+		authorIDStr := c.Param("authorId")
+		var commenterID, authorID int64
+		if _, err := fmt.Sscanf(commenterIDStr, "%d", &commenterID); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid commenterId"})
+			return
+		}
+		if _, err := fmt.Sscanf(authorIDStr, "%d", &authorID); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid authorId"})
+			return
+		}
+		request := rpc.CanCommentRequest{CommenterID: commenterID, AuthorID: authorID}
+		log.Printf("Gateway RPC adapter received CanComment HTTP request commenterId=%s authorId=%s", commenterIDStr, authorIDStr)
+		response, err := followerClient.CanComment(c.Request.Context(), &request)
+		if err != nil {
+			log.Printf("Gateway RPC adapter CanComment gRPC failed commenterId=%s authorId=%s error=%v", commenterIDStr, authorIDStr, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check comment permission"})
+			return
+		}
+		log.Printf("Gateway RPC adapter called Follower gRPC CanComment commenterId=%s authorId=%s allowed=%t", commenterIDStr, authorIDStr, response.Allowed)
+		c.JSON(http.StatusOK, gin.H{"allowed": response.Allowed})
 	})
 
 	router.GET("/api/followers/:userId/recommendations", func(c *gin.Context) {

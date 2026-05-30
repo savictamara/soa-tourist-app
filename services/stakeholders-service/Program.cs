@@ -48,6 +48,11 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddHttpClient("follower", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Services:FollowerUrl"] ?? "http://follower-service:8086/");
+});
+
 builder.Services.AddScoped<IHealthRepository, HealthRepository>();
 builder.Services.AddScoped<IHealthService, HealthService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();

@@ -48,6 +48,23 @@ type RecommendationsResponse struct {
 	Recommendations []UserMessage `json:"recommendations"`
 }
 
+type CanCommentRequest struct {
+	CommenterID int64 `json:"commenterId"`
+	AuthorID    int64 `json:"authorId"`
+}
+
+type CanCommentResponse struct {
+	Allowed bool `json:"allowed"`
+}
+
+type GetFollowedAuthorsRequest struct {
+	UserID int64 `json:"userId"`
+}
+
+type GetFollowedAuthorsResponse struct {
+	AuthorIDs []int64 `json:"authorIds"`
+}
+
 type FollowerClient struct {
 	conn *grpc.ClientConn
 }
@@ -89,5 +106,17 @@ func (c *FollowerClient) UnfollowUser(ctx context.Context, request *UnfollowUser
 func (c *FollowerClient) GetRecommendations(ctx context.Context, request *GetRecommendationsRequest) (*RecommendationsResponse, error) {
 	response := new(RecommendationsResponse)
 	err := c.conn.Invoke(ctx, "/followerrpc.FollowerRpc/GetRecommendations", request, response)
+	return response, err
+}
+
+func (c *FollowerClient) CanComment(ctx context.Context, request *CanCommentRequest) (*CanCommentResponse, error) {
+	response := new(CanCommentResponse)
+	err := c.conn.Invoke(ctx, "/followerrpc.FollowerRpc/CanComment", request, response)
+	return response, err
+}
+
+func (c *FollowerClient) GetFollowedAuthors(ctx context.Context, request *GetFollowedAuthorsRequest) (*GetFollowedAuthorsResponse, error) {
+	response := new(GetFollowedAuthorsResponse)
+	err := c.conn.Invoke(ctx, "/followerrpc.FollowerRpc/GetFollowedAuthors", request, response)
 	return response, err
 }

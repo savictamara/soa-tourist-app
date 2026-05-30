@@ -7,6 +7,7 @@ import (
 	"purchase-service/models"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -69,6 +70,14 @@ func (r *PurchaseRepository) CreateToken(ctx context.Context, token models.TourP
 	if mongo.IsDuplicateKeyError(err) {
 		return nil
 	}
+	return err
+}
+
+func (r *PurchaseRepository) DeleteTokensBatch(ctx context.Context, ids []primitive.ObjectID) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	_, err := r.tokens.DeleteMany(ctx, bson.M{"_id": bson.M{"$in": ids}})
 	return err
 }
 

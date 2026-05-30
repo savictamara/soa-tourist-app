@@ -11,6 +11,7 @@ using StakeholdersService.Repositories;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 
 namespace StakeholdersService.Services;
 
@@ -21,12 +22,20 @@ public class AuthService : IAuthService
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher<User> _passwordHasher;
     private readonly JwtSettings _jwtSettings;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger<AuthService> _logger;
 
-    public AuthService(IUserRepository userRepository, IOptions<JwtSettings> jwtOptions)
+    public AuthService(
+        IUserRepository userRepository,
+        IOptions<JwtSettings> jwtOptions,
+        IHttpClientFactory httpClientFactory,
+        ILogger<AuthService> logger)
     {
         _userRepository = userRepository;
         _passwordHasher = new PasswordHasher<User>();
         _jwtSettings = jwtOptions.Value;
+        _httpClientFactory = httpClientFactory;
+        _logger = logger;
     }
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterUserRequestDto request, CancellationToken cancellationToken = default)
@@ -77,7 +86,31 @@ public class AuthService : IAuthService
             throw new ConflictException("Username or email already exists.");
         }
 
+        // SAGA T2: sync user node to follower service
+        // Compensation C1: delete user from PostgreSQL if follower sync fails
+        try
+        {
+            await SyncUserToFollowerServiceAsync(createdUser, cancellationToken);
+            _logger.LogInformation("Registration SAGA completed userId={UserId} username={Username}", createdUser.Id, createdUser.Username);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Registration SAGA T2 failed userId={UserId} username={Username} — executing compensation C1: deleting user", createdUser.Id, createdUser.Username);
+            await _userRepository.DeleteAsync(createdUser.Id, cancellationToken);
+            throw new InvalidOperationException("Registration failed: could not sync user profile. Please try again.");
+        }
+
         return CreateAuthResponse(createdUser);
+    }
+
+    private async Task SyncUserToFollowerServiceAsync(User user, CancellationToken cancellationToken)
+    {
+        var client = _httpClientFactory.CreateClient("follower");
+        var payload = new { userId = user.Id.ToString(), username = user.Username, role = user.Role };
+        var content = new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json");
+        var response = await client.PostAsync("api/followers/users", content, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        _logger.LogInformation("Registration SAGA T2 succeeded userId={UserId} username={Username} synced to follower service", user.Id, user.Username);
     }
 
     public async Task<AuthResponseDto> LoginAsync(LoginRequestDto request, CancellationToken cancellationToken = default)
