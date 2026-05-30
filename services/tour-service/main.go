@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"tour-service/config"
+	"tour-service/gatewayrpc"
 	"tour-service/handlers"
 	"tour-service/repository"
 	"tour-service/routes"
@@ -50,6 +51,7 @@ func main() {
 	routes.RegisterRoutes(router, tourHandler, executionHandler)
 
 	go rpc.StartGRPCServer(":9091", tourService)
+	go gatewayrpc.StartServer(":9094", executionService)
 
 	if err = router.Run(":8085"); err != nil {
 		log.Fatalf("failed to start server: %v", err)

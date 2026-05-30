@@ -155,6 +155,7 @@ services:
     environment:
       PURCHASE_GRPC_ADDR: purchase-service:9093
       FOLLOWER_GRPC_ADDR: follower-service:9092
+      TOUR_GRPC_ADDR: tour-service:9094
     depends_on:
       - purchase-service
       - follower-service

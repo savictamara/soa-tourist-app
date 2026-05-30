@@ -25,6 +25,12 @@ func main() {
 	}
 	defer followerClient.Close()
 
+	tourClient, err := rpc.NewTourClient()
+	if err != nil {
+		log.Fatalf("failed to configure tour gRPC client: %v", err)
+	}
+	defer tourClient.Close()
+
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:4200"},
@@ -72,6 +78,58 @@ func main() {
 			return
 		}
 		c.JSON(http.StatusCreated, gin.H{"tokens": response.Tokens})
+	})
+
+	router.POST("/api/tours/:tourId/executions/start", func(c *gin.Context) {
+		var request rpc.StartTourExecutionRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+			return
+		}
+		request.TourID = c.Param("tourId")
+		log.Printf("Gateway RPC adapter received StartTourExecution HTTP request tourId=%s touristId=%s", request.TourID, request.TouristID)
+		response, err := tourClient.StartTourExecution(c.Request.Context(), &request)
+		if err != nil {
+			log.Printf("Gateway RPC adapter StartTourExecution gRPC failed tourId=%s touristId=%s error=%v", request.TourID, request.TouristID, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to start tour"})
+			return
+		}
+		log.Printf("Gateway RPC adapter called Tour gRPC StartTourExecution tourId=%s touristId=%s success=%t", request.TourID, request.TouristID, response.Success)
+		if !response.Success {
+			c.JSON(errorStatus(response.Message), gin.H{"error": response.Message})
+			return
+		}
+		c.JSON(http.StatusCreated, response.Execution)
+	})
+
+	router.POST("/api/tours/executions/:executionId/check-location", func(c *gin.Context) {
+		var request rpc.CheckTourExecutionLocationRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+			return
+		}
+		request.ExecutionID = c.Param("executionId")
+		log.Printf("Gateway RPC adapter received CheckTourExecutionLocation HTTP request executionId=%s", request.ExecutionID)
+		response, err := tourClient.CheckTourExecutionLocation(c.Request.Context(), &request)
+		if err != nil {
+			log.Printf("Gateway RPC adapter CheckTourExecutionLocation gRPC failed executionId=%s error=%v", request.ExecutionID, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check tour location"})
+			return
+		}
+		log.Printf("Gateway RPC adapter called Tour gRPC CheckTourExecutionLocation executionId=%s success=%t reached=%t", request.ExecutionID, response.Success, response.KeyPointReached)
+		if !response.Success {
+			c.JSON(errorStatus(response.Message), gin.H{"error": response.Message})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"execution":          response.Execution,
+			"keyPointReached":    response.KeyPointReached,
+			"reachedKeyPoint":    response.ReachedKeyPoint,
+			"distanceMeters":     response.DistanceMeters,
+			"lastActivityAt":     response.LastActivityAt,
+			"completedCount":     response.CompletedCount,
+			"totalKeyPointCount": response.TotalKeyPointCount,
+		})
 	})
 
 	router.POST("/api/followers/follow", func(c *gin.Context) {

@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package tourgateway;
+
+service TourGatewayRpc {
+  rpc StartTourExecution(StartTourExecutionRequest) returns (StartTourExecutionResponse);
+  rpc CheckTourExecutionLocation(CheckTourExecutionLocationRequest) returns (CheckTourExecutionLocationResponse);
+}
+
+message CompletedKeyPointMessage {
+  string keyPointId = 1;
+  string keyPointName = 2;
+  string reachedAt = 3;
+}
+
+message TourExecutionMessage {
+  string id = 1;
+  string tourId = 2;
+  string tourName = 3;
+  string touristId = 4;
+  string status = 5;
+  string startedAt = 6;
+  string completedAt = 7;
+  string abandonedAt = 8;
+  string lastActivityAt = 9;
+  double startLatitude = 10;
+  double startLongitude = 11;
+  double currentLatitude = 12;
+  double currentLongitude = 13;
+  repeated CompletedKeyPointMessage completedKeyPoints = 14;
+}
+
+message StartTourExecutionRequest {
+  string tourId = 1;
+  string touristId = 2;
+  double latitude = 3;
+  double longitude = 4;
+}
+
+message StartTourExecutionResponse {
+  bool success = 1;
+  string message = 2;
+  TourExecutionMessage execution = 3;
+}
+
+message CheckTourExecutionLocationRequest {
+  string executionId = 1;
+  double latitude = 2;
+  double longitude = 3;
+}
+
+message CheckTourExecutionLocationResponse {
+  bool success = 1;
+  string message = 2;
+  TourExecutionMessage execution = 3;
+  bool keyPointReached = 4;
+  CompletedKeyPointMessage reachedKeyPoint = 5;
+  double distanceMeters = 6;
+  string lastActivityAt = 7;
+  int32 completedCount = 8;
+  int32 totalKeyPointCount = 9;
+}
