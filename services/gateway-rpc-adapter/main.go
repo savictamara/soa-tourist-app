@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,12 +9,16 @@ import (
 	"time"
 
 	"gateway-rpc-adapter/rpc"
+	"gateway-rpc-adapter/tracing"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 )
 
 func main() {
+	shutdown := tracing.InitTracer()
+	defer shutdown(context.Background())
 	purchaseClient, err := rpc.NewPurchaseClient()
 	if err != nil {
 		log.Fatalf("failed to configure purchase gRPC client: %v", err)
@@ -33,6 +38,7 @@ func main() {
 	defer tourClient.Close()
 
 	router := gin.Default()
+	router.Use(otelgin.Middleware("gateway-rpc-adapter"))
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:4200"},
 		AllowMethods:     []string{"GET", "POST", "DELETE", "OPTIONS"},
