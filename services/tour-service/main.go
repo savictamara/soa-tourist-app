@@ -9,6 +9,7 @@ import (
 	"tour-service/handlers"
 	"tour-service/repository"
 	"tour-service/routes"
+	"tour-service/rpc"
 	"tour-service/service"
 
 	"github.com/gin-contrib/cors"
@@ -44,6 +45,8 @@ func main() {
 	tourHandler := handlers.NewTourHandler(tourService)
 
 	routes.RegisterRoutes(router, tourHandler)
+
+	go rpc.StartGRPCServer(":9091", tourService)
 
 	if err = router.Run(":8085"); err != nil {
 		log.Fatalf("failed to start server: %v", err)

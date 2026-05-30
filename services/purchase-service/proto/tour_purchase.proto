@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package tourpurchase;
+
+option go_package = "purchase-service/rpc/tourpurchase";
+
+service TourPurchaseRpc {
+  rpc GetTourForPurchase(GetTourForPurchaseRequest) returns (GetTourForPurchaseResponse);
+  rpc ValidateTourPurchase(ValidateTourPurchaseRequest) returns (ValidateTourPurchaseResponse);
+}
+
+message GetTourForPurchaseRequest {
+  string tourId = 1;
+}
+
+message GetTourForPurchaseResponse {
+  string tourId = 1;
+  string name = 2;
+  double price = 3;
+  string status = 4;
+  bool archived = 5;
+}
+
+message ValidateTourPurchaseRequest {
+  string tourId = 1;
+}
+
+message ValidateTourPurchaseResponse {
+  bool valid = 1;
+  string message = 2;
+}

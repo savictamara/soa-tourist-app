@@ -104,6 +104,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: Host=blog-db;Port=5432;Database=blog_db;Username=postgres;Password=root
       FollowerService__BaseUrl: http://follower-service:8086
+      FollowerService__GrpcUrl: http://follower-service:9092
     depends_on:
       blog-db:
         condition: service_healthy
@@ -136,6 +137,7 @@ services:
     environment:
       MONGO_URI: mongodb://purchase-mongo:27017
       TOUR_SERVICE_URL: http://tour-service:8085
+      TOUR_SERVICE_GRPC_ADDR: tour-service:9091
     depends_on:
       - purchase-mongo
       - tour-service

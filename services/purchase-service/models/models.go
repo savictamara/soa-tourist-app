@@ -30,9 +30,9 @@ type TourPurchaseToken struct {
 }
 
 type TourSnapshot struct {
-	ID         string     `json:"id"`
-	Name       string     `json:"name"`
-	Status     string     `json:"status"`
-	ArchivedAt *time.Time `json:"archivedAt,omitempty"`
-	Price      float64    `json:"price"`
+	ID       string  `json:"id"`
+	Name     string  `json:"name"`
+	Status   string  `json:"status"`
+	Archived bool    `json:"archived"`
+	Price    float64 `json:"price"`
 }
