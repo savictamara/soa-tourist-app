@@ -36,6 +36,50 @@ export interface Review {
   images: string[];
 }
 
+export interface CompletedKeyPoint {
+  keyPointId: string;
+  keyPointName: string;
+  reachedAt: string;
+}
+
+export interface TourExecution {
+  id: string;
+  tourId: string;
+  tourName: string;
+  touristId: string;
+  status: 'active' | 'completed' | 'abandoned';
+  startedAt: string;
+  completedAt?: string;
+  abandonedAt?: string;
+  lastActivityAt: string;
+  startLatitude: number;
+  startLongitude: number;
+  currentLatitude: number;
+  currentLongitude: number;
+  completedKeyPoints: CompletedKeyPoint[];
+}
+
+export interface StartTourExecutionRequest {
+  touristId: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface CheckTourExecutionLocationRequest {
+  latitude: number;
+  longitude: number;
+}
+
+export interface CheckTourExecutionLocationResponse {
+  execution: TourExecution;
+  keyPointReached: boolean;
+  reachedKeyPoint?: CompletedKeyPoint;
+  distanceMeters: number;
+  lastActivityAt: string;
+  completedCount: number;
+  totalKeyPointCount: number;
+}
+
 export interface CreateTourRequest {
   authorId: string;
   name: string;

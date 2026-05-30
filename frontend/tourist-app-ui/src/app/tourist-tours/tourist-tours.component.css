@@ -118,6 +118,41 @@ h2, h3, h4 {
   padding-top: 1rem;
 }
 
+.active-execution {
+  margin-top: 1rem;
+  border: 1px solid #f0bfd1;
+  border-radius: 16px;
+  background: #fff4f8;
+  color: #7c5062;
+  padding: 1rem;
+}
+
+.last-session {
+  margin: 1rem 0;
+  border: 1px solid #f0bfd1;
+  border-radius: 14px;
+  background: #fff8fb;
+  padding: 1rem;
+}
+
+.session-badge {
+  display: inline-block;
+  border-radius: 999px;
+  background: #f7d6e4;
+  color: #8d3f5f;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 10px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.execution-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
 .tour-form {
   display: grid;
   gap: 0.8rem;
@@ -142,8 +177,9 @@ button {
   cursor: pointer;
 }
 
-.add-cart-button {
+.add-cart-button, .start-tour-button {
   margin-top: 16px;
+  margin-right: 8px;
 }
 
 .purchased-badge {

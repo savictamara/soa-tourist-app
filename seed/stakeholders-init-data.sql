@@ -72,4 +72,43 @@ SET
     "LastName" = 'Ilic'
 WHERE "Username" = 'jovana';
 
+INSERT INTO users (
+    "Username",
+    "PasswordHash",
+    "Email",
+    "Role",
+    "IsBlocked",
+    "FirstName",
+    "LastName",
+    "Biography",
+    "Motto",
+    "ProfileImage"
+)
+VALUES (
+    'marko',
+    'AQAAAAIAAYagAAAAEI1a1D0Mij0QVmEgc09+uhJsNhzJ/XIs8n1XYqXEQnecUfud2yQsTj3EEyF3yG4I6A==',
+    'marko@stakeholders.local',
+    'Guide',
+    FALSE,
+    'Marko',
+    'Petrovic',
+    'Seeded tour author account for creating and publishing tours.',
+    'Build memorable routes',
+    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e'
+)
+ON CONFLICT ("Username") DO NOTHING;
+
+UPDATE users
+SET
+    "PasswordHash" = 'AQAAAAIAAYagAAAAEI1a1D0Mij0QVmEgc09+uhJsNhzJ/XIs8n1XYqXEQnecUfud2yQsTj3EEyF3yG4I6A==',
+    "Email" = 'marko@stakeholders.local',
+    "Role" = 'Guide',
+    "IsBlocked" = FALSE,
+    "FirstName" = 'Marko',
+    "LastName" = 'Petrovic',
+    "Biography" = 'Seeded tour author account for creating and publishing tours.',
+    "Motto" = 'Build memorable routes',
+    "ProfileImage" = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e'
+WHERE "Username" = 'marko';
+
 DELETE FROM users WHERE "Username" = 'hashseed_jovana123';

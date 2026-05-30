@@ -54,6 +54,29 @@ type Review struct {
 	Images          []string           `bson:"images" json:"images"`
 }
 
+type CompletedKeyPoint struct {
+	KeyPointID   primitive.ObjectID `bson:"keyPointId" json:"keyPointId"`
+	KeyPointName string             `bson:"keyPointName" json:"keyPointName"`
+	ReachedAt    time.Time          `bson:"reachedAt" json:"reachedAt"`
+}
+
+type TourExecution struct {
+	ID                 primitive.ObjectID  `bson:"_id,omitempty" json:"id"`
+	TourID             primitive.ObjectID  `bson:"tourId" json:"tourId"`
+	TourName           string              `bson:"tourName" json:"tourName"`
+	TouristID          string              `bson:"touristId" json:"touristId"`
+	Status             string              `bson:"status" json:"status"`
+	StartedAt          time.Time           `bson:"startedAt" json:"startedAt"`
+	CompletedAt        *time.Time          `bson:"completedAt,omitempty" json:"completedAt,omitempty"`
+	AbandonedAt        *time.Time          `bson:"abandonedAt,omitempty" json:"abandonedAt,omitempty"`
+	LastActivityAt     time.Time           `bson:"lastActivityAt" json:"lastActivityAt"`
+	StartLatitude      float64             `bson:"startLatitude" json:"startLatitude"`
+	StartLongitude     float64             `bson:"startLongitude" json:"startLongitude"`
+	CurrentLatitude    float64             `bson:"currentLatitude" json:"currentLatitude"`
+	CurrentLongitude   float64             `bson:"currentLongitude" json:"currentLongitude"`
+	CompletedKeyPoints []CompletedKeyPoint `bson:"completedKeyPoints" json:"completedKeyPoints"`
+}
+
 type CreateTourRequest struct {
 	AuthorID    string   `json:"authorId"`
 	Name        string   `json:"name"`
@@ -93,4 +116,25 @@ type CreateReviewRequest struct {
 	TouristUsername string   `json:"touristUsername"`
 	VisitedDate     string   `json:"visitedDate"`
 	Images          []string `json:"images"`
+}
+
+type StartTourExecutionRequest struct {
+	TouristID string  `json:"touristId"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}
+
+type CheckTourExecutionLocationRequest struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}
+
+type CheckTourExecutionLocationResponse struct {
+	Execution        TourExecution      `json:"execution"`
+	KeyPointReached  bool               `json:"keyPointReached"`
+	ReachedKeyPoint  *CompletedKeyPoint `json:"reachedKeyPoint,omitempty"`
+	DistanceMeters   float64            `json:"distanceMeters"`
+	LastActivityAt   time.Time          `json:"lastActivityAt"`
+	CompletedCount   int                `json:"completedCount"`
+	TotalKeyPointCnt int                `json:"totalKeyPointCount"`
 }

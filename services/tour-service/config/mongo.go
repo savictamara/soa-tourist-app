@@ -10,15 +10,17 @@ import (
 )
 
 const (
-	defaultMongoURI = "mongodb://localhost:27017"
-	databaseName    = "tourist_app_tours"
-	collectionName  = "tours"
+	defaultMongoURI          = "mongodb://localhost:27017"
+	databaseName             = "tourist_app_tours"
+	collectionName           = "tours"
+	executionsCollectionName = "tour_executions"
 )
 
 type MongoConfig struct {
-	Client     *mongo.Client
-	Database   *mongo.Database
-	Collection *mongo.Collection
+	Client               *mongo.Client
+	Database             *mongo.Database
+	Collection           *mongo.Collection
+	ExecutionsCollection *mongo.Collection
 }
 
 func ConnectMongo() (*MongoConfig, error) {
@@ -37,8 +39,9 @@ func ConnectMongo() (*MongoConfig, error) {
 
 	db := client.Database(databaseName)
 	return &MongoConfig{
-		Client:     client,
-		Database:   db,
-		Collection: db.Collection(collectionName),
+		Client:               client,
+		Database:             db,
+		Collection:           db.Collection(collectionName),
+		ExecutionsCollection: db.Collection(executionsCollectionName),
 	}, nil
 }

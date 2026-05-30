@@ -13,6 +13,6 @@ FROM alpine:3.20
 WORKDIR /app
 COPY --from=builder /app/tour-service ./tour-service
 
-EXPOSE 8085 9091
+EXPOSE 8085 9091 9094
 
 CMD ["./tour-service"]

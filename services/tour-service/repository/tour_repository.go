@@ -100,6 +100,25 @@ func (r *TourRepository) GetPublished(ctx context.Context) ([]models.Tour, error
 	return tours, nil
 }
 
+func (r *TourRepository) GetAvailableForTourists(ctx context.Context) ([]models.Tour, error) {
+	findOpts := options.Find().SetSort(bson.D{{Key: "publishedAt", Value: -1}, {Key: "createdAt", Value: -1}})
+	cur, err := r.collection.Find(ctx, bson.M{"status": bson.M{"$in": []string{"published", "archived"}}}, findOpts)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+
+	var tours []models.Tour
+	if err = cur.All(ctx, &tours); err != nil {
+		return nil, err
+	}
+	if tours == nil {
+		return []models.Tour{}, nil
+	}
+	normalizeTours(tours)
+	return tours, nil
+}
+
 func (r *TourRepository) AddKeyPoint(ctx context.Context, tourID primitive.ObjectID, keyPoint models.KeyPoint) (models.Tour, error) {
 	update := bson.M{
 		"$push": bson.M{

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { CreateKeyPointRequest, CreateReviewRequest, Review, CreateTourRequest, Tour, UpdateDurationsRequest, UpdateKeyPointRequest, UpdatePriceRequest } from '../models/tour.model';
+import { CheckTourExecutionLocationRequest, CheckTourExecutionLocationResponse, CreateKeyPointRequest, CreateReviewRequest, Review, CreateTourRequest, StartTourExecutionRequest, Tour, TourExecution, UpdateDurationsRequest, UpdateKeyPointRequest, UpdatePriceRequest } from '../models/tour.model';
 import { KeyPoint } from '../models/key-point.model';
 
 
@@ -32,6 +32,34 @@ export class TourApiService {
 
   getPublishedTours(): Observable<Tour[]> {
     return this.http.get<Tour[]>(`${this.baseUrl}/published`);
+  }
+
+  getAvailableTours(): Observable<Tour[]> {
+    return this.http.get<Tour[]>(`${this.baseUrl}/available`);
+  }
+
+  getActiveExecution(touristId: string): Observable<TourExecution> {
+    return this.http.get<TourExecution>(`${this.baseUrl}/executions/active/${touristId}`);
+  }
+
+  getLatestExecution(tourId: string, touristId: string): Observable<TourExecution> {
+    return this.http.get<TourExecution>(`${this.baseUrl}/${tourId}/executions/latest/${touristId}`);
+  }
+
+  startTourExecution(tourId: string, request: StartTourExecutionRequest): Observable<TourExecution> {
+    return this.http.post<TourExecution>(`${this.baseUrl}/${tourId}/executions/start`, request);
+  }
+
+  checkExecutionLocation(executionId: string, request: CheckTourExecutionLocationRequest): Observable<CheckTourExecutionLocationResponse> {
+    return this.http.post<CheckTourExecutionLocationResponse>(`${this.baseUrl}/executions/${executionId}/check-location`, request);
+  }
+
+  completeExecution(executionId: string): Observable<TourExecution> {
+    return this.http.post<TourExecution>(`${this.baseUrl}/executions/${executionId}/complete`, {});
+  }
+
+  abandonExecution(executionId: string): Observable<TourExecution> {
+    return this.http.post<TourExecution>(`${this.baseUrl}/executions/${executionId}/abandon`, {});
   }
 
   getAllTours(): Observable<Tour[]> {

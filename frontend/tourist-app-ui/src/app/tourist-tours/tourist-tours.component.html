@@ -46,14 +46,41 @@
         </div>
 
         <button
-          *ngIf="!isPurchased(tour.id)"
+          *ngIf="!isPurchased(tour.id) && tour.status === 'published'"
           type="button"
           class="add-cart-button"
           (click)="addToCart(tour, $event)"
           [disabled]="addingToCartTourId === tour.id || (tour.price || 0) <= 0">
           {{ (tour.price || 0) <= 0 ? 'Tour price must be set by guide' : (addingToCartTourId === tour.id ? 'Adding...' : 'Add To Cart') }}
         </button>
+
+        <button
+          *ngIf="isPurchased(tour.id)"
+          type="button"
+          class="start-tour-button"
+          (click)="startTour(tour, $event)"
+          [disabled]="isStartingExecution || isExecutionForTour(tour.id)">
+          {{ isExecutionForTour(tour.id) ? 'Tour Active' : (isStartingExecution ? 'Starting...' : 'Start Tour') }}
+        </button>
       </article>
+    </div>
+  </div>
+
+  <div *ngIf="activeExecution" class="active-execution">
+    <h3>Active Tour Session <span class="session-badge">{{ getStatusLabel(activeExecution.status) }}</span></h3>
+    <p><strong>{{ activeExecution.tourName }}</strong></p>
+    <p>Status: {{ activeExecution.status }} | Started: {{ activeExecution.startedAt | date:'medium' }}</p>
+    <p>Last activity: {{ activeExecution.lastActivityAt | date:'medium' }}</p>
+    <p>Current position: {{ activeExecution.currentLatitude }}, {{ activeExecution.currentLongitude }}</p>
+    <p>Completed key points: {{ activeExecution.completedKeyPoints.length }}</p>
+    <p *ngIf="executionStatusMessage" class="state">{{ executionStatusMessage }}</p>
+    <div class="execution-actions" *ngIf="activeExecution.status === 'active'">
+      <button type="button" (click)="completeActiveExecution()" [disabled]="isCompletingExecution || isAbandoningExecution">
+        {{ isCompletingExecution ? 'Completing...' : 'Complete Tour' }}
+      </button>
+      <button type="button" class="secondary-button" (click)="abandonActiveExecution()" [disabled]="isCompletingExecution || isAbandoningExecution">
+        {{ isAbandoningExecution ? 'Abandoning...' : 'Abandon Tour' }}
+      </button>
     </div>
   </div>
 
@@ -69,12 +96,22 @@
       </span>
     </p>
 
+    <div *ngIf="latestExecution" class="last-session">
+      <h4>Last Session <span class="session-badge">{{ getStatusLabel(latestExecution.status) }}</span></h4>
+      <p>Started: {{ latestExecution.startedAt | date:'medium' }}</p>
+      <p *ngIf="latestExecution.completedAt">Completed: {{ latestExecution.completedAt | date:'medium' }}</p>
+      <p *ngIf="latestExecution.abandonedAt">Abandoned: {{ latestExecution.abandonedAt | date:'medium' }}</p>
+      <p>Last activity: {{ latestExecution.lastActivityAt | date:'medium' }}</p>
+      <p>Reached key points: {{ latestExecution.completedKeyPoints.length }}</p>
+    </div>
+
     <h4>{{ isPurchased(selectedTour.id) ? 'Key Points' : 'First Key Point' }}</h4>
     <p *ngIf="isLoadingDetails" class="state">Loading details...</p>
     <p *ngIf="!isLoadingDetails && keyPoints.length === 0" class="state">No key points.</p>
     <div *ngIf="keyPoints.length > 0" class="list">
       <article class="card" *ngFor="let keyPoint of keyPoints">
         <p><strong>{{ keyPoint.name }}</strong></p>
+        <span *ngIf="isKeyPointCompleted(keyPoint.id)" class="purchased-badge">Reached</span>
         <p>{{ keyPoint.description }}</p>
         <p>Lat: {{ keyPoint.latitude }} | Lng: {{ keyPoint.longitude }}</p>
         <img *ngIf="keyPoint.imageUrl" class="preview" [src]="keyPoint.imageUrl" alt="Key point image">

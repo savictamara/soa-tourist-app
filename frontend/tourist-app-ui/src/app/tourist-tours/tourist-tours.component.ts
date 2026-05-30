@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { KeyPoint } from '../models/key-point.model';
-import { CreateReviewRequest, Review, Tour } from '../models/tour.model';
+import { CreateReviewRequest, Review, Tour, TourExecution } from '../models/tour.model';
 import { AuthStateService } from '../services/auth-state.service';
+import { PositionSimulatorService } from '../services/position-simulator.service';
 import { PurchaseApiService } from '../services/purchase-api.service';
 import { TourApiService } from '../services/tour-api.service';
 
@@ -12,7 +13,7 @@ import { TourApiService } from '../services/tour-api.service';
   templateUrl: './tourist-tours.component.html',
   styleUrls: ['./tourist-tours.component.css']
 })
-export class TouristToursComponent implements OnInit {
+export class TouristToursComponent implements OnInit, OnDestroy {
   tours: Tour[] = [];
   selectedTour: Tour | null = null;
   keyPoints: KeyPoint[] = [];
@@ -22,6 +23,12 @@ export class TouristToursComponent implements OnInit {
   isSubmittingReview = false;
   addingToCartTourId: string | null = null;
   purchasedTourIds = new Set<string>();
+  activeExecution: TourExecution | null = null;
+  latestExecution: TourExecution | null = null;
+  executionStatusMessage = '';
+  isStartingExecution = false;
+  isCompletingExecution = false;
+  isAbandoningExecution = false;
   successMessage = '';
   errorMessage = '';
   reviewImageDragActive = false;
@@ -32,9 +39,12 @@ export class TouristToursComponent implements OnInit {
     images: [] as string[]
   };
 
+  private executionPollingId: number | null = null;
+
   constructor(
     private readonly tourApiService: TourApiService,
     private readonly purchaseApiService: PurchaseApiService,
+    private readonly positionSimulatorService: PositionSimulatorService,
     private readonly authStateService: AuthStateService
   ) {}
 
@@ -49,12 +59,17 @@ export class TouristToursComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadTours();
+    this.loadActiveExecution();
+  }
+
+  ngOnDestroy(): void {
+    this.stopExecutionPolling();
   }
 
   loadTours(): void {
     this.isLoadingTours = true;
     this.errorMessage = '';
-    this.tourApiService.getPublishedTours().subscribe({
+    this.tourApiService.getAvailableTours().subscribe({
       next: (tours) => {
         this.tours = (tours ?? []).map(tour => ({
           ...tour,
@@ -74,9 +89,116 @@ export class TouristToursComponent implements OnInit {
     });
   }
 
+  startTour(tour: Tour, event?: Event): void {
+    event?.stopPropagation();
+    if (!this.touristId) {
+      this.errorMessage = 'Logged tourist is required.';
+      return;
+    }
+    if (!this.isPurchased(tour.id)) {
+      this.errorMessage = 'Tour must be purchased before it can be started.';
+      return;
+    }
+    this.isStartingExecution = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.positionSimulatorService.getPosition().subscribe({
+      next: (position) => {
+        if (!position) {
+          this.errorMessage = 'Set your current position in Position simulator first.';
+          this.isStartingExecution = false;
+          return;
+        }
+        this.tourApiService.startTourExecution(tour.id, {
+          touristId: this.touristId,
+          latitude: position.latitude,
+          longitude: position.longitude
+        }).subscribe({
+          next: (execution) => {
+            this.activeExecution = this.normalizeExecution(execution);
+            this.selectedTour = tour;
+            this.loadAllKeyPointsAndReviews(tour.id);
+            this.successMessage = 'Tour started.';
+            this.executionStatusMessage = 'Active tour session is running.';
+            this.isStartingExecution = false;
+            this.startExecutionPolling();
+            this.checkActiveExecutionLocation();
+          },
+          error: (error) => {
+            this.errorMessage = error?.error?.error ?? 'Could not start tour.';
+            this.isStartingExecution = false;
+          }
+        });
+      },
+      error: (error) => {
+        this.errorMessage = error?.error?.message ?? 'Could not read current position.';
+        this.isStartingExecution = false;
+      }
+    });
+  }
+
+  completeActiveExecution(): void {
+    if (!this.activeExecution) {
+      return;
+    }
+    this.isCompletingExecution = true;
+    this.tourApiService.completeExecution(this.activeExecution.id).subscribe({
+      next: (execution) => {
+        this.activeExecution = this.normalizeExecution(execution);
+        this.executionStatusMessage = 'Tour completed.';
+        this.successMessage = 'Tour completed.';
+        this.stopExecutionPolling();
+        this.isCompletingExecution = false;
+      },
+      error: (error) => {
+        this.errorMessage = error?.error?.error ?? 'Could not complete tour.';
+        this.isCompletingExecution = false;
+      }
+    });
+  }
+
+  abandonActiveExecution(): void {
+    if (!this.activeExecution) {
+      return;
+    }
+    this.isAbandoningExecution = true;
+    this.tourApiService.abandonExecution(this.activeExecution.id).subscribe({
+      next: (execution) => {
+        this.activeExecution = this.normalizeExecution(execution);
+        this.executionStatusMessage = 'Tour abandoned.';
+        this.successMessage = 'Tour abandoned.';
+        this.stopExecutionPolling();
+        this.isAbandoningExecution = false;
+      },
+      error: (error) => {
+        this.errorMessage = error?.error?.error ?? 'Could not abandon tour.';
+        this.isAbandoningExecution = false;
+      }
+    });
+  }
+
+  isExecutionForTour(tourId: string): boolean {
+    return this.activeExecution?.tourId === tourId && this.activeExecution.status === 'active';
+  }
+
+  isKeyPointCompleted(keyPointId: string): boolean {
+    return (this.activeExecution?.completedKeyPoints ?? []).some(item => item.keyPointId === keyPointId);
+  }
+
+  getStatusLabel(status: string): string {
+    if (status === 'completed') {
+      return 'Completed';
+    }
+    if (status === 'abandoned') {
+      return 'Abandoned';
+    }
+    return 'Active';
+  }
+
   selectTour(tourId: string): void {
     this.isLoadingDetails = true;
     this.errorMessage = '';
+    this.latestExecution = null;
     const tour = this.tours.find(item => item.id === tourId) ?? null;
     if (!tour) {
       this.errorMessage = 'Could not load selected tour.';
@@ -85,6 +207,7 @@ export class TouristToursComponent implements OnInit {
     }
     this.selectedTour = tour;
     this.keyPoints = (tour.keyPoints ?? []).slice(0, 1);
+    this.loadLatestExecution(tourId);
     this.purchaseApiService.isPurchased(this.touristId, tourId).pipe(
       catchError(() => of({ purchased: false }))
     ).subscribe({
@@ -253,7 +376,7 @@ export class TouristToursComponent implements OnInit {
   }
 
   private refreshSelectedTour(tourId: string): void {
-    this.tourApiService.getPublishedTours().subscribe({
+    this.tourApiService.getAvailableTours().subscribe({
       next: (tours) => {
         this.tours = (tours ?? []).map(tour => ({
           ...tour,
@@ -295,6 +418,79 @@ export class TouristToursComponent implements OnInit {
       });
       this.purchasedTourIds = purchased;
     });
+  }
+
+  private loadActiveExecution(): void {
+    if (!this.touristId) {
+      return;
+    }
+    this.tourApiService.getActiveExecution(this.touristId).pipe(
+      catchError(() => of(null))
+    ).subscribe(execution => {
+      this.activeExecution = execution ? this.normalizeExecution(execution) : null;
+      if (this.activeExecution?.status === 'active') {
+        this.executionStatusMessage = 'Active tour session is running.';
+        this.startExecutionPolling();
+      }
+    });
+  }
+
+  private loadLatestExecution(tourId: string): void {
+    if (!this.touristId) {
+      return;
+    }
+    this.tourApiService.getLatestExecution(tourId, this.touristId).pipe(
+      catchError(() => of(null))
+    ).subscribe(execution => {
+      this.latestExecution = execution ? this.normalizeExecution(execution) : null;
+    });
+  }
+
+  private checkActiveExecutionLocation(): void {
+    if (!this.activeExecution || this.activeExecution.status !== 'active') {
+      return;
+    }
+    this.positionSimulatorService.getPosition().subscribe({
+      next: (position) => {
+        if (!position || !this.activeExecution) {
+          this.executionStatusMessage = 'Set your current position in Position simulator to continue tracking.';
+          return;
+        }
+        this.tourApiService.checkExecutionLocation(this.activeExecution.id, position).subscribe({
+          next: (response) => {
+            this.activeExecution = this.normalizeExecution(response.execution);
+            this.executionStatusMessage = response.keyPointReached && response.reachedKeyPoint
+              ? `Reached key point: ${response.reachedKeyPoint.keyPointName}.`
+              : `Last activity updated. Progress: ${response.completedCount}/${response.totalKeyPointCount}.`;
+          },
+          error: (error) => {
+            this.errorMessage = error?.error?.error ?? 'Could not check active tour location.';
+          }
+        });
+      },
+      error: (error) => {
+        this.errorMessage = error?.error?.message ?? 'Could not read current position.';
+      }
+    });
+  }
+
+  private startExecutionPolling(): void {
+    this.stopExecutionPolling();
+    this.executionPollingId = window.setInterval(() => this.checkActiveExecutionLocation(), 10000);
+  }
+
+  private stopExecutionPolling(): void {
+    if (this.executionPollingId != null) {
+      window.clearInterval(this.executionPollingId);
+      this.executionPollingId = null;
+    }
+  }
+
+  private normalizeExecution(execution: TourExecution): TourExecution {
+    return {
+      ...execution,
+      completedKeyPoints: Array.isArray(execution.completedKeyPoints) ? execution.completedKeyPoints : []
+    };
   }
 
   private readReviewImage(file: File): void {

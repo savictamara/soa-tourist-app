@@ -165,6 +165,22 @@ func (s *TourService) GetPublishedTours(ctx context.Context) ([]models.Tour, err
 	return tours, nil
 }
 
+func (s *TourService) GetAvailableToursForTourists(ctx context.Context) ([]models.Tour, error) {
+	tours, err := s.repo.GetAvailableForTourists(ctx)
+	if err != nil {
+		return []models.Tour{}, err
+	}
+	if tours == nil {
+		return []models.Tour{}, nil
+	}
+	for i := range tours {
+		if len(tours[i].KeyPoints) > 1 {
+			tours[i].KeyPoints = tours[i].KeyPoints[:1]
+		}
+	}
+	return tours, nil
+}
+
 func (s *TourService) UpdateKeyPoint(ctx context.Context, tourID primitive.ObjectID, keyPointID primitive.ObjectID, req models.UpdateKeyPointRequest) (models.KeyPoint, error) {
 	if strings.TrimSpace(req.Name) == "" || strings.TrimSpace(req.Description) == "" || strings.TrimSpace(req.ImageURL) == "" {
 		return models.KeyPoint{}, ErrInvalidInput
