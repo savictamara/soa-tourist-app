@@ -9,6 +9,7 @@ import (
 	"purchase-service/handlers"
 	"purchase-service/repository"
 	"purchase-service/routes"
+	"purchase-service/rpc"
 	"purchase-service/service"
 
 	"github.com/gin-contrib/cors"
@@ -40,7 +41,13 @@ func main() {
 	}))
 
 	repo := repository.NewPurchaseRepository(mongoCfg.Carts, mongoCfg.PurchaseTokens)
-	purchaseService := service.NewPurchaseService(repo)
+	tourRPCClient, err := rpc.NewTourRPCClient()
+	if err != nil {
+		log.Fatalf("failed to configure tour-service gRPC client: %v", err)
+	}
+	defer tourRPCClient.Close()
+
+	purchaseService := service.NewPurchaseService(repo, tourRPCClient)
 	purchaseHandler := handlers.NewPurchaseHandler(purchaseService)
 	routes.RegisterRoutes(router, purchaseHandler)
 
